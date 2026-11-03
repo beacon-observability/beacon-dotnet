@@ -180,7 +180,7 @@ internal static class PackageVersionDefinitions
             TestApplicationName = "TestApplication.MySqlConnector",
             Versions =
             [
-                new("2.0.0"),
+                new("2.6.1"),
                 new("*")
             ]
         },
