@@ -73,3 +73,6 @@
 *.verified.txt text eol=lf
 *.verified.xml text eol=lf
 *.verified.json text eol=lf
+
+# Security contract digests require exact LF bytes on every checkout platform.
+/beacon/security/*.json text eol=lf

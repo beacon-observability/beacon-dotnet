@@ -6,6 +6,7 @@ using System.Diagnostics;
 #endif
 #if NET
 using System.Globalization;
+using Newtonsoft.Json.Linq;
 #endif
 using IntegrationTests.Helpers;
 
@@ -26,6 +27,104 @@ public class SmokeTests : TestHelper
     {
         SetEnvironmentVariable("OTEL_SERVICE_NAME", ServiceName);
     }
+
+#if NET
+    [Theory]
+    [InlineData(true, null, true)]
+    [InlineData(false, null, true)]
+    [InlineData(true, "false", true)]
+    [InlineData(true, null, false)]
+    [Trait("Category", "EndToEnd")]
+    public void SecurityInventoryRefreshReachesOtlp(bool enabled, string? sbomEnabled, bool logsEnabled)
+    {
+        using var collector = new MockLogsCollector(Output);
+        SetExporter(collector);
+        var expected = enabled && sbomEnabled != "false" && logsEnabled;
+        SetEnvironmentVariable("BEACON_TEST_SECURITY_SBOM", expected ? "wait" : "exit");
+        SetEnvironmentVariable("BEACON_SECURITY_ENABLED", enabled ? "true" : "false");
+        SetEnvironmentVariable("BEACON_SECURITY_SBOM_ENABLED", sbomEnabled);
+        SetEnvironmentVariable("BEACON_SECURITY_SBOM_REFRESH_SECONDS", "1");
+        SetEnvironmentVariable("OTEL_DOTNET_AUTO_TRACES_ENABLED", "false");
+        SetEnvironmentVariable("OTEL_DOTNET_AUTO_METRICS_ENABLED", "false");
+        SetEnvironmentVariable("OTEL_DOTNET_AUTO_LOGS_ENABLED", logsEnabled ? "true" : "false");
+        SetEnvironmentVariable("OTEL_DOTNET_AUTO_LOGS_INSTRUMENTATION_ENABLED", "false");
+        SetEnvironmentVariable("OTEL_BLRP_SCHEDULE_DELAY", "100");
+        if (!expected)
+        {
+            collector.ExpectCollected(records => records.Count == 0, "Disabled Security/SBOM/logs should emit no inventory.");
+            RunTestApplication();
+            collector.AssertCollected();
+            return;
+        }
+
+        var rounds = new List<JObject>();
+        for (var index = 0; index < 2; index++)
+        {
+            collector.Expect(
+                record =>
+                {
+                    if (!record.Attributes.Any(attribute => attribute.Key == "source" && attribute.Value.StringValue == "beacon_security_sbom"))
+                    {
+                        return false;
+                    }
+
+                    rounds.Add(JObject.Parse(record.Body.StringValue));
+                    return true;
+                },
+                "A complete runtime inventory round should reach OTLP.");
+        }
+
+        using var process = StartTestApplication();
+        using var helper = new ProcessHelper(process);
+        try
+        {
+            collector.AssertExpectations();
+            Assert.Equal(2, rounds.Count);
+            foreach (var round in rounds)
+            {
+                Assert.Equal(2, (int)round["schema_version"]!);
+                Assert.Equal("beacon.security.sbom.inventory", (string?)round["event_name"]);
+                Assert.True(Guid.TryParse((string?)round["instance_id"], out _));
+                Assert.Null(round["part_count"]);
+                Assert.NotEmpty((JArray)round["dependencies"]!);
+            }
+
+            Assert.Equal((string?)rounds[0]["instance_id"], (string?)rounds[1]["instance_id"]);
+            Assert.Equal((string?)rounds[0]["started_at"], (string?)rounds[1]["started_at"]);
+            Assert.True((DateTime)rounds[1]["observed_at"]! > (DateTime)rounds[0]["observed_at"]!);
+            Assert.True((long)rounds[1]["uptime_ms"]! > (long)rounds[0]["uptime_ms"]!);
+            Assert.Contains(rounds[1]["dependencies"]!, dependency => (string?)dependency["name"] == ServiceName);
+        }
+        finally
+        {
+            if (process is not null && !process.HasExited)
+            {
+                process.Kill();
+                process.WaitForExit();
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData(false, 0)]
+    [InlineData(true, 1)]
+    [Trait("Category", "EndToEnd")]
+    public void SecurityConcatPropagationWithoutTelemetryInstrumentation(bool enabled, int expectedRanges)
+    {
+        EnableBytecodeInstrumentation();
+        SetEnvironmentVariable("BEACON_TEST_SECURITY_CONCAT", "true");
+        SetEnvironmentVariable("BEACON_SECURITY_ENABLED", enabled ? "true" : "false");
+        SetEnvironmentVariable("BEACON_SECURITY_SBOM_ENABLED", "false");
+        SetEnvironmentVariable("OTEL_DOTNET_AUTO_TRACES_ENABLED", "false");
+        SetEnvironmentVariable("OTEL_DOTNET_AUTO_METRICS_ENABLED", "false");
+        SetEnvironmentVariable("OTEL_DOTNET_AUTO_LOGS_ENABLED", "false");
+        var (output, _, _) = RunTestApplication();
+        foreach (var arity in new[] { 2, 3, 4 })
+        {
+            Assert.Contains($"NATIVE_CONCAT_RANGES_{arity}={expectedRanges}", output, StringComparison.Ordinal);
+        }
+    }
+#endif
 
     [Fact]
     [Trait("Category", "EndToEnd")]

@@ -20,7 +20,7 @@ internal static class AdoNetInstrumentation
 
     public static Activity? StartActivity<TTarget>(TTarget instance, string methodName)
     {
-        if (instance is not IDbCommand iDbCommand)
+        if (!Instrumentation.TracerSettings.Value.TracesEnabled || instance is not IDbCommand iDbCommand)
         {
             return null;
         }

@@ -21,8 +21,9 @@ and produces Beacon .NET artifacts from it. The product entry point is
   Release and run .NET 8 applications again.
 - Releases include a unified SHA-256 manifest, an SPDX SBOM, and GitHub artifact
   attestations.
-- Beacon-specific runtime enhancements have not yet been implemented.
-  End-to-end DataKit ingestion is not yet within the verified support scope.
+- An opt-in [Security runtime assembly inventory](security/README.md) is in
+  development. Security finding detection and end-to-end DataKit ingestion are
+  not yet within the verified support scope.
 
 These statements describe the engineering readiness of Beacon itself. Upstream
 support is not automatically treated as verified Beacon support.

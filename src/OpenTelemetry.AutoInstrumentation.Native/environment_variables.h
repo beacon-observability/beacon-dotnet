@@ -14,6 +14,9 @@ namespace environment {
 // Sets logging level used by autoinstrumentation loggers
 const WSTRING log_level = WStr("OTEL_LOG_LEVEL");
 
+// Security is opt-in; only its explicit definitions may target core-library methods.
+const WSTRING security_enabled = WStr("BEACON_SECURITY_ENABLED");
+
 // Sets logger used by autoinstrumentation
 const WSTRING log_sink = WStr("OTEL_DOTNET_AUTO_LOGGER");
 

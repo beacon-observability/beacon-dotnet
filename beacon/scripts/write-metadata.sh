@@ -34,6 +34,14 @@ upstream_repository="$(sed -n 's/.*"repository": "\([^"]*\)".*/\1/p' "${reposito
 upstream_tag="$(sed -n 's/.*"releaseTag": "\([^"]*\)".*/\1/p' "${repository_root}/beacon/upstream.lock.json")"
 upstream_commit="$(sed -n 's/.*"releaseCommit": "\([0-9a-f]*\)".*/\1/p' "${repository_root}/beacon/upstream.lock.json")"
 source_commit="$(git -C "${repository_root}" rev-parse HEAD)"
+security_metadata="$(bash "${repository_root}/beacon/scripts/check-security-contract.sh")"
+
+# Ship the exact contracts named by the provenance, not a floating remote link.
+mkdir -p "${directory}/beacon-security"
+cp "${repository_root}/beacon/security/spec.lock.json" \
+  "${repository_root}/beacon/security/beacon-security-event-v2.schema.json" \
+  "${repository_root}/beacon/security/fingerprint-v1.json" \
+  "${directory}/beacon-security/"
 
 cat > "${directory}/BEACON-METADATA.json" <<EOF
 {
@@ -41,6 +49,7 @@ cat > "${directory}/BEACON-METADATA.json" <<EOF
   "version": "${version}",
   "target": "${target}",
   "sourceCommit": "${source_commit}",
+  "security": ${security_metadata},
   "upstream": {
     "repository": "${upstream_repository}",
     "releaseTag": "${upstream_tag}",

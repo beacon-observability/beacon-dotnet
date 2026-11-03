@@ -187,6 +187,8 @@ jobs:
               find . -type f -print0 | LC_ALL=C sort -z | xargs -0 zip -q -X "../${archive}"
             )
             unzip -q "${archive}" -d "${sbom_source}/${suffix}"
+            bash beacon/scripts/check-security-contract.sh \
+              --directory "${sbom_source}/${suffix}/beacon-security" >/dev/null
           done
 
       - name: Collect native packages
@@ -231,7 +233,13 @@ jobs:
             unzip -p "${archive}" BEACON-METADATA.json | jq -e \
               --arg version "${version}" \
               --arg source_commit "${source_commit}" \
-              '.version == $version and .sourceCommit == $source_commit' >/dev/null
+              --slurpfile security beacon/security/spec.lock.json \
+              '.version == $version and .sourceCommit == $source_commit and
+               .security.schemaVersion == $security[0].target_schema_version and
+               .security.fingerprintVersion == $security[0].fingerprint_version and
+               .security.spec.commit == $security[0].commit and
+               .security.spec.schemaSha256 == $security[0].event_schema_sha256 and
+               .security.spec.fingerprintVectorsSha256 == $security[0].fingerprint_vectors_sha256' >/dev/null
           done
 
           mapfile -t native_packages < <(find . -maxdepth 1 -type f \

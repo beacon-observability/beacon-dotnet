@@ -1,5 +1,19 @@
 # Configuration
 
+## Beacon Security (in development)
+
+Beacon-specific Security settings and current implementation limits are described
+in [the Security development guide](../beacon/security/README.md). The opt-in
+`BEACON_SECURITY_ENABLED` switch currently enables runtime assembly inventory and
+experimental query-to-file and query-to-SQL/HTTP/process flow observations. See the
+guide for the limited modeled coverage.
+
+Local Security diagnostics additionally require
+`BEACON_SECURITY_LOCAL_OUTPUT_ENABLED=true` (default `false`).
+`BEACON_SECURITY_OUTPUT` selects the snapshot root and
+`BEACON_SECURITY_EVIDENCE_FILE` optionally selects a bounded JSONL finding file;
+paths alone do not enable local output. See the guide for defaults and budgets.
+
 ## Configuration methods
 
 You can apply configuration settings in the following ways,

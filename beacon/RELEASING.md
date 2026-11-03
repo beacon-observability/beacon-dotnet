@@ -47,8 +47,13 @@ sbom.spdx.json
 GitHub also provides source archives and Release attestations. Platform archives
 retain upstream internal file names and include `BEACON-METADATA.json`, which
 records the Beacon version, target platform, source commit, upstream tag, and
-upstream commit. The aggregate NuGet archive retains upstream-compatible package
-IDs.
+upstream commit. Its `security` object records experimental status, the disabled
+default, schema/fingerprint versions, the pinned Security specification commit,
+and schema/conformance-vector SHA-256 digests. The matching files are included in
+`beacon-security/`. Metadata generation rejects missing, altered or unsupported
+contracts before packaging. These declarations identify the implemented contract;
+they do not establish platform acceptance or exploit detection. The aggregate
+NuGet archive retains upstream-compatible package IDs.
 
 DEB/RPM and MSI files must be covered by the unified checksum manifest and
 artifact attestations. Windows Authenticode and APT/RPM repository signing are
@@ -68,6 +73,12 @@ bash beacon/scripts/package.sh \
 
 These scripts do not replace builds, unit tests, functional tests, or
 platform-specific validation.
+
+Metadata generation requires `jq` and either `sha256sum` or `shasum`. To check the
+Security declarations and their rejection controls independently, run
+`bash beacon/scripts/check-security-contract.test.sh`. The checked-in conformance
+vectors deliberately include unpaired UTF-16 surrogates; their byte digest is
+checked during packaging and their semantics are tested by the managed suite.
 
 ## Release and Acceptance Process
 

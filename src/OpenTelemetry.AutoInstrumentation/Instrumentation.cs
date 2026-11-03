@@ -11,6 +11,7 @@ using OpenTelemetry.AutoInstrumentation.Logging;
 using OpenTelemetry.AutoInstrumentation.PluginApi.ContinuousProfiling;
 using OpenTelemetry.AutoInstrumentation.PluginApi.SelectiveSampling;
 using OpenTelemetry.AutoInstrumentation.Plugins;
+using OpenTelemetry.AutoInstrumentation.Security;
 using OpenTelemetry.AutoInstrumentation.Util;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -34,6 +35,8 @@ internal static class Instrumentation
 
     private static TracerProvider? _tracerProvider;
     private static MeterProvider? _meterProvider;
+    private static SecurityRuntime? _securityRuntime;
+    private static SecurityLocalOutput? _securityLocalOutput;
 
     private static PluginManager? _pluginManager;
 
@@ -43,6 +46,8 @@ internal static class Instrumentation
 #if NETFRAMEWORK
     private static CanaryThreadManager? _canaryThreadManager;
 #endif
+
+    internal static SecurityLocalOutput? LocalSecurityOutput => _securityLocalOutput;
 
     internal static LoggerProvider? LoggerProvider
     {
@@ -231,6 +236,9 @@ internal static class Instrumentation
             OpAmpHelper.EnableOpAmpClient(resources, OpAmpSettings.Value, _pluginManager);
         }
 
+        _securityLocalOutput = GeneralSettings.Value.SetupSdk ? SecurityLocalOutput.TryStart(Environment.GetEnvironmentVariable) : null;
+        _securityRuntime = SecurityRuntime.TryStart(_securityLocalOutput);
+
         // Notify plugins all initialization is done
         _pluginManager.Initialized();
     }
@@ -378,8 +386,9 @@ internal static class Instrumentation
         Logger.Debug($"InitializeLoggerProvider called. LogsEnabled={LogSettings.Value.LogsEnabled}, EnableLog4NetBridge={LogSettings.Value.EnableLog4NetBridge}, EnableNLogBridge={LogSettings.Value.EnableNLogBridge}");
         Logger.Debug($"EnabledInstrumentations: {string.Join(", ", LogSettings.Value.EnabledInstrumentations)}");
 
-        // Initialize logger provider if any bridge is enabled
+        // Initialize the provider for enabled log bridges or the Security runtime.
         var shouldInitialize = LogSettings.Value.LogsEnabled && (
+            (GeneralSettings.Value.SetupSdk && SecurityRuntime.Enabled) ||
             (LogSettings.Value.EnableLog4NetBridge && LogSettings.Value.EnabledInstrumentations.Contains(LogInstrumentation.Log4Net)) ||
             (LogSettings.Value.EnableNLogBridge && LogSettings.Value.EnabledInstrumentations.Contains(LogInstrumentation.NLog)));
 
@@ -573,6 +582,9 @@ internal static class Instrumentation
         try
         {
             OpAmpHelper.StopOpAmpClientIfRunning(_pluginManager);
+
+            _securityRuntime?.Dispose();
+            _securityLocalOutput?.Dispose();
 
             LazyInstrumentationLoader?.Dispose();
             _sampleExporter?.Dispose();

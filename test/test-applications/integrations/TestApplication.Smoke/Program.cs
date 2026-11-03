@@ -18,6 +18,23 @@ internal sealed class Program
 
     public static void Main(string[] args)
     {
+        if (Environment.GetEnvironmentVariable("BEACON_TEST_SECURITY_SBOM") is { } sbomMode)
+        {
+            if (sbomMode == "wait")
+            {
+                // The collector releases this process after two inventory rounds.
+                Process.GetCurrentProcess().WaitForExit();
+            }
+
+            return;
+        }
+
+        if (Environment.GetEnvironmentVariable("BEACON_TEST_SECURITY_CONCAT") == "true")
+        {
+            SecurityConcatScenario.Run();
+            return;
+        }
+
         ConsoleHelper.WriteSplashScreen(args);
         EmitTracesAndLogs();
         EmitMetrics();

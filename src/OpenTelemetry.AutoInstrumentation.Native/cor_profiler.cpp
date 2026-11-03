@@ -728,6 +728,14 @@ HRESULT CorProfiler::TryRejitModule(ModuleID module_id)
             }
         }
 
+        // CoreCLR's library loads before managed definitions are available. Keep its
+        // module ID for the later, explicit Security ReJIT requests only when opted in.
+        // Desktop CLR keeps its existing shared-AppDomain behavior until validated.
+        if (!runtime_information_.is_desktop() && IsSecurityEnabled())
+        {
+            module_ids_.push_back(module_id);
+        }
+
         return S_OK;
     }
 
@@ -782,7 +790,8 @@ HRESULT CorProfiler::TryRejitModule(ModuleID module_id)
 
         for (auto&& skip_assembly_pattern : skip_assembly_prefixes)
         {
-            if (module_info.assembly.name.rfind(skip_assembly_pattern, 0) == 0)
+            if (module_info.assembly.name.rfind(skip_assembly_pattern, 0) == 0 &&
+                !(IsSecurityEnabled() && module_info.assembly.name == WStr("System.Diagnostics.Process")))
             {
                 Logger::Debug("ModuleLoadFinished skipping module by pattern: ", module_id, " ",
                               module_info.assembly.name);
@@ -1380,7 +1389,8 @@ HRESULT STDMETHODCALLTYPE CorProfiler::GetAssemblyReferences(const WCHAR*       
     // managed profiler
     for (auto&& skip_assembly_pattern : skip_assembly_prefixes)
     {
-        if (assembly_name.rfind(skip_assembly_pattern, 0) == 0)
+        if (assembly_name.rfind(skip_assembly_pattern, 0) == 0 &&
+            !(IsSecurityEnabled() && assembly_name == WStr("System.Diagnostics.Process")))
         {
             Logger::Debug("GetAssemblyReferences skipping module by pattern: Name=", assembly_name,
                           " Path=", wszAssemblyPath);
