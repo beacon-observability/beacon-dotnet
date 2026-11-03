@@ -17,6 +17,8 @@
     <PackageReference Include="Google.Protobuf" />
     <PackageReference Include="Grpc.Tools" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Data.SqlClient" />
+    <!-- Override vulnerable PKCS versions inherited from the SQL client on each TFM. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="StrongNamer" Condition="$(TargetFramework.StartsWith('net4'))" />
     <PackageReference Include="Testcontainers" />
