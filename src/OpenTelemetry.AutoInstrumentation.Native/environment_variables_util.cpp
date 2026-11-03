@@ -38,6 +38,11 @@ bool IsFailFastEnabled()
     CheckIfTrue(GetEnvironmentValue(environment::fail_fast_enabled));
 }
 
+bool IsSecurityEnabled()
+{
+    CheckIfTrue(GetEnvironmentValue(environment::security_enabled));
+}
+
 std::optional<bool> IsAssemblyRedirectionEnabled()
 {
     // 1. Get the primary assembly redirection variable

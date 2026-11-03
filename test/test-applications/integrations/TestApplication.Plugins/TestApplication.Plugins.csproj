@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Compile Include="..\TestApplication.Smoke\Program.cs" />
+    <Compile Include="..\TestApplication.Smoke\SecurityConcatScenario.cs" />
     <Compile Include="..\TestApplication.Smoke\SmokeLoggingExtensions.cs" />
   </ItemGroup>
 

@@ -94,10 +94,10 @@ internal sealed class EnvironmentHelper
 
     public static string GetNukeBuildOutput()
     {
-        string nukeOutputPath = Path.Combine(
-            EnvironmentTools.GetSolutionDirectory(),
-            "bin",
-            "tracer-home");
+        var overridePath = Environment.GetEnvironmentVariable("BEACON_TEST_TRACER_HOME");
+        string nukeOutputPath = string.IsNullOrWhiteSpace(overridePath)
+            ? Path.Combine(EnvironmentTools.GetSolutionDirectory(), "bin", "tracer-home")
+            : Path.GetFullPath(overridePath);
 
         if (Directory.Exists(nukeOutputPath))
         {

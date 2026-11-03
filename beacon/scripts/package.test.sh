@@ -25,6 +25,18 @@ archive="${outputs[0]}"
 checksum="${outputs[1]}"
 [[ -f "${archive}" && -f "${checksum}" ]]
 unzip -p "${archive}" BEACON-METADATA.json | grep -q '"product": "Beacon .NET"'
+unzip -p "${archive}" BEACON-METADATA.json | jq -e \
+  --slurpfile lock "${repository_root}/beacon/security/spec.lock.json" \
+  '.security.schemaVersion == $lock[0].target_schema_version and
+   .security.fingerprintVersion == $lock[0].fingerprint_version and
+   .security.enabledByDefault == false and .security.status == "experimental" and
+   .security.spec.commit == $lock[0].commit and
+   .security.spec.schemaSha256 == $lock[0].event_schema_sha256 and
+   .security.spec.fingerprintVectorsSha256 == $lock[0].fingerprint_vectors_sha256' >/dev/null
+mkdir "${test_root}/unpacked"
+unzip -q "${archive}" 'beacon-security/*' -d "${test_root}/unpacked"
+bash "${repository_root}/beacon/scripts/check-security-contract.sh" \
+  --directory "${test_root}/unpacked/beacon-security" >/dev/null
 unzip -l "${archive}" | grep -q 'net/OpenTelemetry.AutoInstrumentation.StartupHook.dll'
 (cd "${test_root}/output" && sha256sum --check "$(basename "${checksum}")")
 

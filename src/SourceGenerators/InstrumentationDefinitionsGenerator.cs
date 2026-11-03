@@ -93,6 +93,8 @@ public class InstrumentationDefinitionsGenerator : IIncrementalGenerator
         var logsByIntegrationName = new Dictionary<string, List<(string IntegrationType, TargetToGenerate Target)>>();
         var metricsByIntegrationName = new Dictionary<string, List<(string IntegrationType, TargetToGenerate Target)>>();
 
+        var securityByIntegrationName = new Dictionary<string, List<(string IntegrationType, TargetToGenerate Target)>>();
+
         var instrumentationCount = 0;
 
         foreach (var integrationToGenerate in integrationClasses)
@@ -110,6 +112,9 @@ public class InstrumentationDefinitionsGenerator : IIncrementalGenerator
                         break;
                     case 2:
                         byName = logsByIntegrationName;
+                        break;
+                    case 3:
+                        byName = securityByIntegrationName;
                         break;
                     default:
                         continue;
@@ -171,6 +176,10 @@ internal static partial class InstrumentationDefinitions
         if (metricSettings.MetricsEnabled)";
         GenerateInstrumentationForSignal(metricsByIntegrationName, sb, metricsHeader, "metricSettings.EnabledInstrumentations.Contains(MetricInstrumentation");
 
+        const string securityHeader = @"        // Beacon Security (independent of trace, metric and log instrumentation switches)
+        if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())";
+        GenerateInstrumentationForSignal(securityByIntegrationName, sb, securityHeader, null);
+
         sb.AppendLine(@"        return nativeCallTargetDefinitions.ToArray();
     }
 }");
@@ -178,7 +187,7 @@ internal static partial class InstrumentationDefinitions
         return sb.ToString();
     }
 
-    private static void GenerateInstrumentationForSignal(Dictionary<string, List<(string IntegrationType, TargetToGenerate Target)>> integrations, StringBuilder sb, string signalHeader, string conditionPrefix)
+    private static void GenerateInstrumentationForSignal(Dictionary<string, List<(string IntegrationType, TargetToGenerate Target)>> integrations, StringBuilder sb, string signalHeader, string? conditionPrefix)
     {
         if (integrations.Count > 0)
         {
@@ -191,7 +200,7 @@ internal static partial class InstrumentationDefinitions
         }
     }
 
-    private static void GenerateIntegrations(Dictionary<string, List<(string IntegrationType, TargetToGenerate Target)>> integrationsByName, StringBuilder sb, string conditionPrefix)
+    private static void GenerateIntegrations(Dictionary<string, List<(string IntegrationType, TargetToGenerate Target)>> integrationsByName, StringBuilder sb, string? conditionPrefix)
     {
         bool firstLine = true;
         foreach (var group in integrationsByName)
@@ -209,7 +218,15 @@ internal static partial class InstrumentationDefinitions
             sb.AppendLine(group.Key);
             const string ifTemplate = @"            if ({0}.{1}))
             {{";
-            sb.AppendFormat(CultureInfo.InvariantCulture, ifTemplate, conditionPrefix, group.Key);
+            if (conditionPrefix is null)
+            {
+                sb.Append("            {");
+            }
+            else
+            {
+                sb.AppendFormat(CultureInfo.InvariantCulture, ifTemplate, conditionPrefix, group.Key);
+            }
+
             sb.AppendLine();
 
             foreach (var integration in group.Value)

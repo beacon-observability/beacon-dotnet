@@ -4,7 +4,8 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [string]$MsiPath
+    [string]$MsiPath,
+    [scriptblock]$ValidateInstalled
 )
 
 $ErrorActionPreference = "Stop"
@@ -26,16 +27,24 @@ if (-not $installDirectory -or -not (Test-Path (Join-Path $installDirectory "BEA
 }
 
 $cli = Join-Path $installDirectory "beacon-dotnet.ps1"
-& $cli status
-$env:OTEL_TRACES_EXPORTER = "none"
-$env:OTEL_METRICS_EXPORTER = "none"
-$env:OTEL_LOGS_EXPORTER = "none"
-& $cli run dotnet --info
-if (-not $?) {
-    throw "beacon-dotnet run failed with exit code $LASTEXITCODE."
+try {
+    & $cli status
+    if ($ValidateInstalled) {
+        # Run checks before the CLI enables profiling in the current shell.
+        & $ValidateInstalled $installDirectory
+    }
+    $env:OTEL_TRACES_EXPORTER = "none"
+    $env:OTEL_METRICS_EXPORTER = "none"
+    $env:OTEL_LOGS_EXPORTER = "none"
+    & $cli run dotnet --info
+    if (-not $?) {
+        throw "beacon-dotnet run failed with exit code $LASTEXITCODE."
+    }
+}
+finally {
+    & $cli uninstall
 }
 
-& $cli uninstall
 if (Test-Path -LiteralPath $installDirectory) {
     throw "MSI installation directory still exists after uninstall."
 }

@@ -7,5 +7,6 @@ internal enum InstrumentationType
 {
     Trace = 0,
     Metric = 1,
-    Log = 2
+    Log = 2,
+    Security = 3
 }

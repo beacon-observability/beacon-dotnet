@@ -30,7 +30,9 @@ jobs:
       - name: Check Beacon metadata
         run: bash beacon/scripts/check-version.sh
       - name: Test Beacon packaging
-        run: bash beacon/scripts/package.test.sh
+        run: |
+          bash beacon/scripts/check-security-contract.test.sh
+          bash beacon/scripts/package.test.sh
       - name: Test installation script uninstall
         run: |
           sh -n script-templates/otel-dotnet-auto-install.sh.template
@@ -87,6 +89,11 @@ jobs:
             --configuration Release \
             -p:Platform=x64
           dotnet build \
+            test/test-applications/integrations/TestApplication.MinimalApi/TestApplication.MinimalApi.csproj \
+            --framework net8.0 \
+            --configuration Release \
+            -p:Platform=x64
+          dotnet build \
             test/IntegrationTests/IntegrationTests.csproj \
             --framework net8.0 \
             --configuration Release \
@@ -103,6 +110,31 @@ jobs:
             --Tests:IntegrationTests.HttpTests.SubmitTraces,IntegrationTests.HttpTests.SubmitMetrics \
             '--Logger:trx;LogFileName=beacon-release-aspnetcore.trx' \
             --ResultsDirectory:test-artifacts/release-validation
+          dotnet vstest \
+            test/IntegrationTests/bin/x64/Release/net8.0/IntegrationTests.dll \
+            '--TestCaseFilter:FullyQualifiedName~Security' \
+            '--Logger:trx;LogFileName=beacon-release-security.trx' \
+            --ResultsDirectory:test-artifacts/release-validation
+      - name: Validate Security on .NET 9 and .NET 10
+        run: |
+          for framework in net9.0 net10.0; do
+            dotnet build \
+              test/test-applications/integrations/TestApplication.Smoke/TestApplication.Smoke.csproj \
+              --framework "${framework}" --configuration Release -p:Platform=x64
+            dotnet build \
+              test/test-applications/integrations/TestApplication.MinimalApi/TestApplication.MinimalApi.csproj \
+              --framework "${framework}" --configuration Release -p:Platform=x64
+            dotnet test \
+              test/OpenTelemetry.AutoInstrumentation.Tests/OpenTelemetry.AutoInstrumentation.Tests.csproj \
+              --framework "${framework}" --configuration Release \
+              --filter FullyQualifiedName~Tests.Security
+            dotnet test \
+              test/IntegrationTests/IntegrationTests.csproj \
+              --framework "${framework}" --configuration Release -p:Platform=x64 \
+              --filter FullyQualifiedName~Security \
+              --logger "trx;LogFileName=beacon-release-security-${framework}.trx" \
+              --results-directory test-artifacts/release-validation
+          done
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: beacon-dotnet-linux-glibc-x64
@@ -113,6 +145,46 @@ jobs:
           name: beacon-dotnet-release-validation-linux-glibc-x64
           path: test-artifacts/release-validation/
           if-no-files-found: error
+
+  macos-security:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-dotnet
+      - name: Build macOS Security payload
+        run: ./build.sh BuildTracer --platform ARM64
+      - name: Validate macOS Security
+        run: |
+          set -euo pipefail
+          for framework in net8.0 net9.0 net10.0; do
+            dotnet build \
+              test/test-applications/integrations/TestApplication.Smoke/TestApplication.Smoke.csproj \
+              --framework "${framework}" --configuration Release -p:Platform=ARM64
+            dotnet build \
+              test/test-applications/integrations/TestApplication.MinimalApi/TestApplication.MinimalApi.csproj \
+              --framework "${framework}" --configuration Release -p:Platform=ARM64
+            dotnet test \
+              test/OpenTelemetry.AutoInstrumentation.Tests/OpenTelemetry.AutoInstrumentation.Tests.csproj \
+              --framework "${framework}" --configuration Release -p:Platform=ARM64 \
+              --filter FullyQualifiedName~Tests.Security
+            dotnet test \
+              test/IntegrationTests/IntegrationTests.csproj \
+              --framework "${framework}" --configuration Release -p:Platform=ARM64 \
+              --filter FullyQualifiedName~Security \
+              --logger "trx;LogFileName=beacon-macos-security-${framework}.trx" \
+              --results-directory test-artifacts/release-validation
+          done
+      - name: Upload macOS Security results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: beacon-macos-security-results
+          path: test-artifacts/release-validation/
+          if-no-files-found: ignore
 
   windows-build:
     uses: ./.github/workflows/_build.yml
@@ -125,7 +197,7 @@ jobs:
   windows-msi:
     needs: windows-build
     runs-on: windows-2022
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -157,4 +229,43 @@ jobs:
         run: |
           $msiFiles = @(Get-ChildItem bin/native-packages -Filter *.msi)
           if ($msiFiles.Count -ne 1) { throw "Expected exactly one MSI." }
-          ./packaging/windows/test-msi.ps1 -MsiPath $msiFiles[0].FullName
+          $validateInstalled = {
+            param([string]$installedHome)
+            function Invoke-CheckedDotNet {
+              & dotnet @args
+              if ($LASTEXITCODE -ne 0) { throw "dotnet failed with exit code $LASTEXITCODE." }
+            }
+            $previousHome = $env:BEACON_TEST_TRACER_HOME
+            try {
+              $env:BEACON_TEST_TRACER_HOME = $installedHome
+              foreach ($framework in @("net8.0", "net9.0", "net10.0")) {
+                Invoke-CheckedDotNet build `
+                  test/test-applications/integrations/TestApplication.Smoke/TestApplication.Smoke.csproj `
+                  --framework $framework --configuration Release -p:Platform=x64
+                Invoke-CheckedDotNet build `
+                  test/test-applications/integrations/TestApplication.MinimalApi/TestApplication.MinimalApi.csproj `
+                  --framework $framework --configuration Release -p:Platform=x64
+                Invoke-CheckedDotNet test `
+                  test/OpenTelemetry.AutoInstrumentation.Tests/OpenTelemetry.AutoInstrumentation.Tests.csproj `
+                  --framework $framework --configuration Release `
+                  --filter FullyQualifiedName~Tests.Security
+                Invoke-CheckedDotNet test `
+                  test/IntegrationTests/IntegrationTests.csproj `
+                  --framework $framework --configuration Release -p:Platform=x64 `
+                  --filter FullyQualifiedName~Security `
+                  --logger "trx;LogFileName=beacon-msi-security-$framework.trx" `
+                  --results-directory test-artifacts/release-validation
+              }
+            }
+            finally {
+              $env:BEACON_TEST_TRACER_HOME = $previousHome
+            }
+          }
+          ./packaging/windows/test-msi.ps1 -MsiPath $msiFiles[0].FullName -ValidateInstalled $validateInstalled
+      - name: Upload MSI Security results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: beacon-msi-security-results
+          path: test-artifacts/release-validation/
+          if-no-files-found: ignore

@@ -9,6 +9,14 @@ This component adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ### Added
 
+- Beacon-only opt-in runtime assembly inventory over OTEL Logs, with serial
+  refresh and bounded multipart records, plus experimental ASP.NET Core query
+  to file-read, SQL-template, HTTP-destination and process-invocation flow observations.
+- Declare the experimental Security contract versions and pinned schema/vector
+  digests in Beacon artifact metadata, and include the matching contract files.
+- Add separately opt-in, bounded asynchronous Security diagnostic snapshots and
+  an optional rotating JSONL finding evidence file.
+
 ### Changed
 
 #### Dependency updates
