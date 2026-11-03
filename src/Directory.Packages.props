@@ -52,6 +52,6 @@
     <PackageVersion Include="System.IO.Pipelines" Version="5.0.1" Condition=" '$(TargetFramework)' == 'net8.0' " Label="Transient dependencies of OpenTelemetry.Instrumentation.StackExchangeRedis: likely should be excluded" />
     <PackageVersion Include="System.Security.Cryptography.Cng" Version="4.7.0" Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' " Label="Transient dependencies of OpenTelemetry.Instrumentation.Wcf: likely should be excluded" />
     <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="4.7.0" Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' " Label="Transient dependencies of OpenTelemetry.Instrumentation.Wcf: likely should be excluded" />
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="4.7.1" Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' " Label="Transient dependencies of OpenTelemetry.Instrumentation.Wcf: likely should be excluded" />
+    <PackageVersion Update="System.Security.Cryptography.Xml" Version="4.7.1" Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' " Label="Transient dependencies of OpenTelemetry.Instrumentation.Wcf: likely should be excluded" />
   </ItemGroup>
 </Project>
