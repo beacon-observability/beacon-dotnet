@@ -7,6 +7,8 @@
 
   <ItemGroup>
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" VersionOverride="$(LibraryVersion)" />
+    <!-- Override the vulnerable transitive driver in older provider versions. -->
+    <PackageReference Include="MySqlConnector" />
     <!-- Microsoft.Extensions.Caching.Memory is indirect reference. Bumping it to mitigate https://github.com/advisories/GHSA-qj66-m88j-hmgj -->
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
   </ItemGroup>

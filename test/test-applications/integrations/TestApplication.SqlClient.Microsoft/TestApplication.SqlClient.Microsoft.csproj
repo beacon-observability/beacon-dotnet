@@ -2,6 +2,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" VersionOverride="$(LibraryVersion)" />
+    <!-- Override the vulnerable transitive dependency in older library versions. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
   </ItemGroup>
 
   <ItemGroup>

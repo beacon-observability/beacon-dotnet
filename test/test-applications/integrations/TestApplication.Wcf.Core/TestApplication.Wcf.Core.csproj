@@ -7,5 +7,8 @@
     <PackageReference Include="CoreWCF.Http" VersionOverride="$(LibraryVersion)" />
     <PackageReference Include="CoreWCF.NetTcp" VersionOverride="$(LibraryVersion)" />
     <PackageReference Include="CoreWCF.Primitives" VersionOverride="$(LibraryVersion)" />
+    <!-- Override vulnerable cryptography inherited from the older server versions. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+    <PackageReference Include="System.Security.Cryptography.Xml" />
   </ItemGroup>
 </Project>
