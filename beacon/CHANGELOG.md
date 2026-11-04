@@ -5,6 +5,13 @@ This file records Beacon .NET product changes only. See the root
 
 ## Unreleased
 
+## 1.1.1 - 2026-11-04
+
+- Fix release example restoration by pinning the transitive PKCS dependency to
+  the lowest patched 9.x version (9.0.21), retaining NuGet vulnerability checks.
+- Include the experimental Security changes prepared for 1.1.0; the 1.1.0
+  release build failed before publication.
+
 ## 1.1.0 - 2026-11-04
 
 - Add an opt-in Security runtime assembly inventory with periodic OTEL Logs
