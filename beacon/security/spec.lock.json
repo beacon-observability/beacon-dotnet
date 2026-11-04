@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/beacon-observability/beacon-security-spec",
+  "commit": "af1b834501210bfd197bf606163680129cc5d09b",
+  "target_schema_version": 2,
+  "fingerprint_version": 1,
+  "event_schema_sha256": "72fe082c89d8758be8766436ac4429891a4d91110057e69b603294bb178bb7df",
+  "fingerprint_vectors_sha256": "860b1b14e8019f699764b238f0d744b649d259d39f3f3638f02ae8db68cbabc2"
+}

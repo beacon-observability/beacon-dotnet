@@ -6,6 +6,8 @@
 
   <ItemGroup>
     <PackageReference Include="Oracle.ManagedDataAccess.Core" VersionOverride="$(LibraryVersion)" />
+    <!-- Override the vulnerable transitive dependency in older library versions. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
   </ItemGroup>
   
   <ItemGroup>

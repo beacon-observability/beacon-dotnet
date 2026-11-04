@@ -2,6 +2,8 @@
 
   <ItemGroup>
     <PackageReference Include="MySql.Data" VersionOverride="$(LibraryVersion)" />
+    <!-- Override the vulnerable transitive dependency in older library versions. -->
+    <PackageReference Include="System.Text.Json" />
   </ItemGroup>
 
 </Project>

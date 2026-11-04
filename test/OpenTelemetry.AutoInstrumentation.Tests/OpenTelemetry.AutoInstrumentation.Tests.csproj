@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\beacon\security\fingerprint-v1.json" Link="Security\fingerprint-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Configurations\FileBased\Files\TestInstrumentationConfigurationFile.yaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

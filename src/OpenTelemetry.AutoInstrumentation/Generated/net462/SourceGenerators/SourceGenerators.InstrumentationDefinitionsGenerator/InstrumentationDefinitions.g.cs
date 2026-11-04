@@ -17,7 +17,7 @@ internal static partial class InstrumentationDefinitions
 {
     private static NativeCallTargetDefinition[] GetDefinitionsArray()
     {
-        var nativeCallTargetDefinitions = new List<NativeCallTargetDefinition>(67);
+        var nativeCallTargetDefinitions = new List<NativeCallTargetDefinition>(80);
         // Traces
         var tracerSettings = Instrumentation.TracerSettings.Value;
         if (tracerSettings.TracesEnabled)
@@ -177,6 +177,31 @@ internal static partial class InstrumentationDefinitions
             if (metricSettings.EnabledInstrumentations.Contains(MetricInstrumentation.NServiceBus))
             {
                 nativeCallTargetDefinitions.Add(new("NServiceBus.Core", "NServiceBus.EndpointConfiguration", ".ctor", ["System.Void", "System.String"], 8, 0, 0, 8, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Instrumentations.NServiceBus.EndpointConfigurationIntegration"));
+            }
+        }
+
+        // Beacon Security (independent of trace, metric and log instrumentation switches)
+        if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+        {
+            // Sqlite
+            {
+                nativeCallTargetDefinitions.Add(new("Microsoft.Data.Sqlite", "Microsoft.Data.Sqlite.SqliteCommand", "ExecuteReaderAsync", ["System.Threading.Tasks.Task`1[Microsoft.Data.Sqlite.SqliteDataReader]", "System.Data.CommandBehavior", "System.Threading.CancellationToken"], 8, 0, 0, 11, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteDbDataReaderAsyncIntegration"));
+                nativeCallTargetDefinitions.Add(new("Microsoft.Data.Sqlite", "Microsoft.Data.Sqlite.SqliteCommand", "ExecuteReader", ["Microsoft.Data.Sqlite.SqliteDataReader", "System.Data.CommandBehavior"], 8, 0, 0, 11, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteDbDataReaderIntegration"));
+            }
+
+            // Security
+            {
+                nativeCallTargetDefinitions.Add(new("Devart.Data.Oracle", "Devart.Data.Oracle.OracleCommand", "ExecuteNonQuery", ["System.Int32"], 9, 0, 0, 11, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteNonQueryIntegration"));
+                nativeCallTargetDefinitions.Add(new("Microsoft.AspNetCore.Hosting", "Microsoft.AspNetCore.Hosting.HostingApplication", "ProcessRequestAsync", ["System.Threading.Tasks.Task", "Context"], 6, 0, 0, 10, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Security.AspNetCoreRequestIntegration"));
+                nativeCallTargetDefinitions.Add(new("System.Private.CoreLib", "System.IO.File", "ReadAllText", ["System.String", "System.String"], 6, 0, 0, 10, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Security.FileReadAllTextIntegration"));
+                nativeCallTargetDefinitions.Add(new("System.Net.Http", "System.Net.Http.HttpMessageInvoker", "SendAsync", ["System.Threading.Tasks.Task`1[System.Net.Http.HttpResponseMessage]", "System.Net.Http.HttpRequestMessage", "System.Threading.CancellationToken"], 6, 0, 0, 10, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Security.HttpMessageInvokerSendIntegration"));
+                nativeCallTargetDefinitions.Add(new("System.Diagnostics.Process", "System.Diagnostics.Process", "Start", ["System.Boolean"], 6, 0, 0, 10, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Security.ProcessStartIntegration"));
+                nativeCallTargetDefinitions.Add(new("System.Private.CoreLib", "System.String", "Concat", ["System.String", "System.String", "System.String"], 6, 0, 0, 10, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Security.StringConcat2Integration"));
+                nativeCallTargetDefinitions.Add(new("mscorlib", "System.String", "Concat", ["System.String", "System.String", "System.String"], 4, 0, 0, 4, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Security.StringConcat2Integration"));
+                nativeCallTargetDefinitions.Add(new("System.Private.CoreLib", "System.String", "Concat", ["System.String", "System.String", "System.String", "System.String"], 6, 0, 0, 10, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Security.StringConcat3Integration"));
+                nativeCallTargetDefinitions.Add(new("mscorlib", "System.String", "Concat", ["System.String", "System.String", "System.String", "System.String"], 4, 0, 0, 4, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Security.StringConcat3Integration"));
+                nativeCallTargetDefinitions.Add(new("System.Private.CoreLib", "System.String", "Concat", ["System.String", "System.String", "System.String", "System.String", "System.String"], 6, 0, 0, 10, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Security.StringConcat4Integration"));
+                nativeCallTargetDefinitions.Add(new("mscorlib", "System.String", "Concat", ["System.String", "System.String", "System.String", "System.String", "System.String"], 4, 0, 0, 4, 65535, 65535, AssemblyFullName, "OpenTelemetry.AutoInstrumentation.Security.StringConcat4Integration"));
             }
         }
 

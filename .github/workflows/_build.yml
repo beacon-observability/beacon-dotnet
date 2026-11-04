@@ -192,7 +192,8 @@ jobs:
           git status
           git config color.diff always
           git --no-pager diff
-          [[ -z "$(git status --porcelain)" ]]
+          bash beacon/scripts/check-generated-files.test.sh
+          bash beacon/scripts/check-generated-files.sh
 
       - name: Cleanup build environment
         if: ${{ always() }}

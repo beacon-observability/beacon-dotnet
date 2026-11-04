@@ -5,6 +5,15 @@ This file records Beacon .NET product changes only. See the root
 
 ## Unreleased
 
+- Add an opt-in Security runtime assembly inventory with periodic OTEL Logs
+  publication and bounded multipart records. Add experimental ASP.NET Core query
+  to file-read, SQL-template, HTTP-destination and process-invocation flow
+  observations over OTEL Logs.
+- Include experimental Security contract versions, the specification commit and
+  schema/vector digests in artifact metadata, with the exact contracts bundled.
+- Add separately opt-in Security diagnostic snapshots and an optional bounded
+  JSONL finding file, without blocking request threads or changing OTLP export.
+
 ## 1.0.0 - 2026-09-28
 
 - Publish the first stable Beacon .NET release.

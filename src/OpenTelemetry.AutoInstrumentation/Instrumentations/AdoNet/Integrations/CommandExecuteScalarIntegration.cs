@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using OpenTelemetry.AutoInstrumentation.CallTarget;
+using OpenTelemetry.AutoInstrumentation.Security;
 
 namespace OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations;
 
@@ -41,17 +42,51 @@ namespace OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations
     integrationName: AdoNetConstants.IntegrationName,
     type: InstrumentationType.Trace,
     kind: IntegrationKind.Derived)]
+[InstrumentMethod(
+    assemblyName: AdoNetConstants.SystemDataCommonAssemblyName,
+    typeName: AdoNetConstants.DbCommandTypeName,
+    methodName: AdoNetConstants.ExecuteScalarMethodName,
+    returnTypeName: ClrNames.Object,
+    parameterTypeNames: [],
+    minimumVersion: AdoNetConstants.SystemDataCommonMinVersion,
+    maximumVersion: AdoNetConstants.SystemDataCommonMaxVersion,
+    integrationName: "Security",
+    type: InstrumentationType.Security,
+    kind: IntegrationKind.Derived)]
+[InstrumentMethod(
+    assemblyName: AdoNetConstants.SystemDataAssemblyName,
+    typeName: AdoNetConstants.DbCommandTypeName,
+    methodName: AdoNetConstants.ExecuteScalarMethodName,
+    returnTypeName: ClrNames.Object,
+    parameterTypeNames: [],
+    minimumVersion: AdoNetConstants.SystemDataMinVersion,
+    maximumVersion: AdoNetConstants.SystemDataMaxVersion,
+    integrationName: "Security",
+    type: InstrumentationType.Security,
+    kind: IntegrationKind.Derived)]
+[InstrumentMethod(
+    assemblyName: AdoNetConstants.NetStandardAssemblyName,
+    typeName: AdoNetConstants.DbCommandTypeName,
+    methodName: AdoNetConstants.ExecuteScalarMethodName,
+    returnTypeName: ClrNames.Object,
+    parameterTypeNames: [],
+    minimumVersion: AdoNetConstants.NetStandardMinVersion,
+    maximumVersion: AdoNetConstants.NetStandardMaxVersion,
+    integrationName: "Security",
+    type: InstrumentationType.Security,
+    kind: IntegrationKind.Derived)]
 public static class CommandExecuteScalarIntegration
 {
     internal static CallTargetState OnMethodBegin<TTarget>(TTarget instance)
     {
         var activity = AdoNetInstrumentation.StartActivity(instance, AdoNetConstants.ExecuteScalarMethodName);
-        return new CallTargetState(activity, null);
+        return new CallTargetState(activity, SecuritySqlScope.Begin(instance!, AdoNetConstants.ExecuteScalarMethodName));
     }
 
     internal static CallTargetReturn<TReturn> OnMethodEnd<TTarget, TReturn>(TTarget instance, TReturn returnValue, Exception? exception, in CallTargetState state)
     {
         AdoNetInstrumentation.StopActivity(state.Activity, exception);
+        (state.State as SecuritySqlScope)?.Dispose();
         return new CallTargetReturn<TReturn>(returnValue);
     }
 }
