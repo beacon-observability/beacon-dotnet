@@ -43,12 +43,12 @@ jobs:
         machine:
         - windows-2022
         - windows-2025
-        - macos-14
+        - macos-15
         - ubuntu-22.04
         - ubuntu-22.04-arm
         exclude:
           - test-tfm: net462
-            machine: macos-14
+            machine: macos-15
           - test-tfm: net462
             machine: ubuntu-22.04
           - test-tfm: net462
@@ -63,9 +63,9 @@ jobs:
           - machine: ubuntu-22.04
             containers: linux
             artifact-name: ubuntu-22.04
-          - machine: macos-14
+          - machine: macos-15
             containers: none
-            artifact-name: macos-14
+            artifact-name: macos-15
           - machine: ubuntu-22.04-arm
             containers: linux
             artifact-name: ubuntu-22.04-arm
@@ -363,7 +363,7 @@ jobs:
         include:
           - machine: ubuntu-22.04
           - machine: ubuntu-22.04-arm
-          - machine: macos-14
+          - machine: macos-15
           - machine: windows-2022
           - machine: windows-2025
     runs-on: ${{ matrix.machine }}

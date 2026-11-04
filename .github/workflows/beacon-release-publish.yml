@@ -217,7 +217,7 @@ jobs:
         include:
           - machine: ubuntu-22.04
           - machine: ubuntu-22.04-arm
-          - machine: macos-14
+          - machine: macos-15
     runs-on: ${{ matrix.machine }}
     permissions:
       attestations: read
