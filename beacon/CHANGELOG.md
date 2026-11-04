@@ -17,7 +17,8 @@ This file records Beacon .NET product changes only. See the root
   JSONL finding file, without blocking request threads or changing OTLP export.
 
 - Fix audited build/test dependencies and generated-output verification.
-- Move macOS build and validation jobs to the supported macOS 15 runner.
+- Move macOS build and validation jobs to the supported macOS 15 runner, while
+  preserving the native library's macOS 14 deployment minimum.
 
 ## 1.0.0 - 2026-09-28
 

@@ -16,8 +16,10 @@ partial class Build
 
             var (major, minor, patch) = VersionHelper.GetVersionParts();
 
+            // Preserve the macOS 14 deployment minimum of the published native library
+            // when building on newer macOS runners.
             CMake.Value(
-                arguments: $"../ -DCMAKE_BUILD_TYPE=Release -DOTEL_AUTO_VERSION={VersionHelper.GetVersionWithoutSuffixes()} -DOTEL_AUTO_VERSION_MAJOR={major} -DOTEL_AUTO_VERSION_MINOR={minor} -DOTEL_AUTO_VERSION_PATCH={patch}",
+                arguments: $"../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 -DOTEL_AUTO_VERSION={VersionHelper.GetVersionWithoutSuffixes()} -DOTEL_AUTO_VERSION_MAJOR={major} -DOTEL_AUTO_VERSION_MINOR={minor} -DOTEL_AUTO_VERSION_PATCH={patch}",
                 workingDirectory: buildDirectory);
             Make.Value(
                 arguments: $"",
