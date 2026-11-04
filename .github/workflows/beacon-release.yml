@@ -165,7 +165,7 @@ jobs:
             "ubuntu-22.04 linux-glibc-x64 linux-glibc-x64"
             "ubuntu-22.04-arm linux-glibc-arm64 linux-glibc-arm64"
             "windows-2022 windows-x64-x86 windows"
-            "macos-14 macos-arm64 macos"
+            "macos-15 macos-arm64 macos"
             "nuget-packages nuget-packages nuget-packages"
           )
 
@@ -298,7 +298,7 @@ jobs:
       - name: Attest macOS files
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          subject-path: ./bin-macos-14/**/*
+          subject-path: ./bin-macos-15/**/*
 
       - name: Attest NuGet files
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
