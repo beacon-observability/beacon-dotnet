@@ -8,7 +8,7 @@ setup, signal options, OpAMP, selective sampling, and continuous profiling.
 
 Set `OTEL_DOTNET_AUTO_PLUGINS` to a colon-separated list of plugin type names,
 specified with the
-[assembly-qualified name](https://docs.microsoft.com/en-us/dotnet/api/system.type.assemblyqualifiedname?view=net-6.0#system-type-assemblyqualifiedname).
+[assembly-qualified name](https://docs.microsoft.com/dotnet/api/system.type.assemblyqualifiedname?view=net-6.0#system-type-assemblyqualifiedname).
 This list is colon-separated because type names can contain commas.
 
 Every plugin type is instantiated at most once. A plugin must:
@@ -180,22 +180,25 @@ public class MyOptionsPlugin : IPlugin,
 
 Implement `IOpAmpPlugin` to customize the OpAMP client and observe its
 lifecycle.
-OpAMP methods are called on every configured plugin implementing `IOpAmpPlugin`.
+The first configured plugin implementing `IOpAmpPlugin` controls OpAMP. Others
+still participate through their other plugin interfaces. For file-based
+configuration, `plugins` entries precede `plugins_list`; otherwise configured
+list order applies.
 
 > [!NOTE]
-> `OpenTelemetry.OpAmp.Client` 0.7.0-alpha.1 queues outgoing messages. The
-> `Send*Async` methods available in 0.6.0-alpha.1 were replaced by corresponding
-> `Send*` methods. Call `FlushAsync` when the plugin must wait until the outgoing
-> queue is empty.
+> The OpAMP client is owned by automatic instrumentation. Plugins receive a
+> restricted client interface and cannot start, stop, or dispose the client.
+> Unsupported capabilities are not advertised.
 
 ```csharp
 using OpenTelemetry.AutoInstrumentation.PluginApi;
 using OpenTelemetry.AutoInstrumentation.PluginApi.OpAmp;
-using OpenTelemetry.OpAmp.Client;
 using OpenTelemetry.OpAmp.Client.Settings;
 
 public class MyOpAmpPlugin : IPlugin, IOpAmpPlugin
 {
+    private IOpAmpClient? _client;
+
     public void Initializing()
     {
     }
@@ -206,21 +209,132 @@ public class MyOpAmpPlugin : IPlugin, IOpAmpPlugin
 
     public void ConfigureOpAmpOptions(OpAmpClientSettings settings)
     {
-        // Called before the OpAMP client is created.
+        // Configure settings before client creation.
     }
 
-    public void AfterOpAmpClientStarted(OpAmpClient client)
+    public void ConfigureOpAmpClient(IOpAmpClient client)
     {
-        // Called after the OpAMP client is created and started.
+        // Subscribe to messages here.
+        _client = client;
+    }
+
+    public void AfterOpAmpClientStarted()
+    {
+        // Publish initial reporting state and issue enabled reporting notifications here.
+        // Connectivity is not guaranteed.
     }
 
     public void BeforeOpAmpClientStopped()
     {
-        // Called before the OpAMP client is stopped.
-        // Avoid long-running work during application shutdown.
+        // Release resources and unsubscribe here.
     }
 }
 ```
+
+Initialization invokes `ConfigureOpAmpOptions`, `ConfigureOpAmpClient`, ordinary
+`IPlugin.Initialized` callbacks, and client startup in that order. Subscribe in
+`ConfigureOpAmpClient` to receive messages from the initial server response.
+Client startup is asynchronous.
+
+`AfterOpAmpClientStarted` means the client start operation completed; it does not
+guarantee connectivity or initial-message delivery. It is skipped if startup
+throws, is cancelled, or loses a race with shutdown. When invoked, it completes
+before `BeforeOpAmpClientStopped` begins.
+
+`BeforeOpAmpClientStopped` may run without `AfterOpAmpClientStarted`. Release
+resources and unsubscribe there, including resources acquired before
+`ConfigureOpAmpClient` throws. Lifecycle callbacks must return promptly and
+tolerate client disposal during forced shutdown.
+
+OpAMP requests do not produce application spans. Listener callbacks must return
+promptly. A blocking listener can delay other listeners and subsequent OpAMP
+message processing. Hand off lengthy work and return from the callback promptly.
+
+The default HTTP and WebSocket clients do not follow redirects. To enable them,
+set `settings.AllowRedirects = true` in `ConfigureOpAmpOptions`. This setting
+does not apply to clients returned by `HttpClientFactory` or
+`ClientWebSocketFactory`, which control their own redirect behavior. WebSocket
+redirects cannot be disabled on .NET Framework.
+
+Use `settings.MaxPendingMessageBytes` in `ConfigureOpAmpOptions` to limit the
+aggregate size of pending custom messages, including state reports queued with
+them. This replaces the upstream `MaxPendingCustomMessageBytes` property. The
+automatic instrumentation environment variable
+`OTEL_DOTNET_AUTO_OPAMP_MAX_PENDING_CUSTOM_MESSAGE_BYTES` and YAML field
+`max_pending_custom_message_bytes` retain their names and configure this limit.
+
+OpAMP plugin-state reports are scheduled asynchronously. Repeated server requests
+for full state are coalesced, ensuring at least five seconds between consecutive
+server-requested full-state sends. Plugin notifications are scheduled independently
+and are not subject to this interval.
+
+### Remote configuration status reporting
+
+The selected OpAMP plugin can implement `IProvideRemoteConfigStatus` and set
+`settings.RemoteConfiguration.ReportsRemoteConfigStatus = true` in
+`ConfigureOpAmpOptions`. Reporting requires both the provider and this explicit
+opt-in. To receive remote configuration offers, separately set
+`settings.RemoteConfiguration.AcceptsRemoteConfig = true` and subscribe to
+`RemoteConfigMessage` in `ConfigureOpAmpClient`. Both settings default to `false`.
+The plugin owns configuration processing and application.
+
+Implement `GetRemoteConfigStatus()` to return a `RemoteConfigStatusReport` with
+the received configuration hash, its application status, and an optional error
+message for a failed application. The getter can run before any configuration
+offer arrives or before application finishes. Return `null` when no status is
+available; that omits the status from the report. While applying a received
+configuration, return `RemoteConfigStatusCode.Applying` with its hash.
+
+If a status is already available, call `client.NotifyRemoteConfigStatusChanged()`
+from `AfterOpAmpClientStarted` after publishing it. Otherwise, call when the first
+status becomes available and whenever it later changes.
+Status reporting continues if the server stops offering remote configuration.
+The getter may be called while a reporting notification is in progress and must
+return promptly. Publish status safely across threads and provide a stable
+snapshot, including its hash buffer. Do not issue reporting notifications or
+synchronously wait for OpAMP callbacks from the getter. Reads may overlap plugin
+lifecycle callbacks, including cleanup.
+
+Repeated notifications can resend unchanged status. The provider may be queried
+independently of change notifications, including when responding to a full-state
+request. Getter and reporting failures are logged; later notifications or server
+requests can retry. A failed getter omits status from a full-state response while
+other state is still reported.
+Returning from a notification does not confirm delivery to the server. Do not rely
+on delivery during shutdown.
+
+### Effective configuration reporting
+
+The selected OpAMP plugin can implement `IProvideEffectiveConfig` and set
+`settings.EffectiveConfigurationReporting.EnableReporting = true` in
+`ConfigureOpAmpOptions`. Reporting is disabled when the selected plugin does not
+provide this interface or does not enable the setting.
+
+Implement `GetEffectiveConfig()` to return the complete current configuration as
+an `IReadOnlyCollection<EffectiveConfigFile>`. File names must be unique.
+An empty collection reports an empty configuration. Contents are transmitted
+without redaction, so the plugin is responsible for removing sensitive values.
+
+Retain the client passed to `ConfigureOpAmpClient`. From
+`AfterOpAmpClientStarted`, call `client.NotifyEffectiveConfigChanged()` after
+publishing the initial effective configuration and whenever it later changes.
+Repeated notifications can resend unchanged configuration.
+
+Notifications remain pending while effective configuration reporting is unavailable
+and may be coalesced. The provider may also be queried independently for a
+server-requested full-state report.
+
+`GetEffectiveConfig()` must be read-only and return promptly. It must tolerate
+concurrent configuration updates and plugin lifecycle callbacks, including
+cleanup. Publish configuration safely across threads and return a stable snapshot,
+including its buffers, that remains valid after the getter returns. Do not issue
+reporting notifications or synchronously wait for OpAMP callbacks from the getter.
+
+Reporting requires server support. Getter and reporting failures are logged;
+a later notification or server request can attempt reporting again.
+If configuration retrieval fails during a full-state request, the other
+available state is still reported. Effective configuration is omitted;
+this does not report an empty configuration.
 
 ## Selective sampling
 
@@ -296,6 +410,14 @@ public class MyContinuousProfilerPlugin : IPlugin, IContinuousProfilerPlugin
 ```
 
 `Exporter` must implement `IContinuousProfilerExporter`.
+Its `ExportThreadSamples(byte[], int, uint, CancellationToken)` method receives
+the CPU sampling interval in milliseconds for each native batch. Use that
+interval to set the exported profile period. Existing exporters must update
+their `ExportThreadSamples` implementation to accept the interval.
+
+An exporter and a nonzero CPU interval or allocation limit prepare the
+corresponding managed handler even when its `Enabled` setting is false. Native
+sampling remains disabled until a runtime configuration enables that feature.
 
 ## Supported Options
 
@@ -303,43 +425,42 @@ public class MyContinuousProfilerPlugin : IPlugin, IContinuousProfilerPlugin
 
 | Options type                                                                              | NuGet package                                     | NuGet version |
 |-------------------------------------------------------------------------------------------|---------------------------------------------------|---------------|
-| OpenTelemetry.Exporter.ConsoleExporterOptions                                             | OpenTelemetry.Exporter.Console                    | 1.19.1        |
-| OpenTelemetry.Exporter.ZipkinExporterOptions  **Deprecated**                              | OpenTelemetry.Exporter.Zipkin                     | 1.19.1        |
-| OpenTelemetry.Exporter.OtlpExporterOptions                                                | OpenTelemetry.Exporter.OpenTelemetryProtocol      | 1.19.1        |
-| OpenTelemetry.Instrumentation.AspNet.AspNetTraceInstrumentationOptions                    | OpenTelemetry.Instrumentation.AspNet              | 1.19.0        |
-| OpenTelemetry.Instrumentation.AspNetCore.AspNetCoreTraceInstrumentationOptions            | OpenTelemetry.Instrumentation.AspNetCore          | 1.19.0        |
-| OpenTelemetry.Instrumentation.EntityFrameworkCore.EntityFrameworkInstrumentationOptions   | OpenTelemetry.Instrumentation.EntityFrameworkCore | 1.19.0-beta.1 |
-| OpenTelemetry.Instrumentation.GrpcNetClient.GrpcClientTraceInstrumentationOptions         | OpenTelemetry.Instrumentation.GrpcNetClient       | 1.19.1-beta.1 |
-| OpenTelemetry.Instrumentation.Http.HttpClientTraceInstrumentationOptions                  | OpenTelemetry.Instrumentation.Http                | 1.19.0        |
-| OpenTelemetry.Instrumentation.Quartz.QuartzInstrumentationOptions                         | OpenTelemetry.Instrumentation.Quartz              | 1.19.0-beta.1 |
-| OpenTelemetry.Instrumentation.SqlClient.SqlClientTraceInstrumentationOptions              | OpenTelemetry.Instrumentation.SqlClient           | 1.19.0        |
-| OpenTelemetry.Instrumentation.StackExchangeRedis.StackExchangeRedisInstrumentationOptions | OpenTelemetry.Instrumentation.StackExchangeRedis  | 1.19.0-beta.1 |
-| OpenTelemetry.Instrumentation.Wcf.WcfInstrumentationOptions                               | OpenTelemetry.Instrumentation.Wcf                 | 1.19.1-beta.1 |
+| OpenTelemetry.Exporter.ConsoleExporterOptions                                             | OpenTelemetry.Exporter.Console                    | 1.20.1        |
+| OpenTelemetry.Exporter.ZipkinExporterOptions  **Deprecated**                              | OpenTelemetry.Exporter.Zipkin                     | 1.20.1        |
+| OpenTelemetry.Exporter.OtlpExporterOptions                                                | OpenTelemetry.Exporter.OpenTelemetryProtocol      | 1.20.1        |
+| OpenTelemetry.Instrumentation.AspNet.AspNetTraceInstrumentationOptions                    | OpenTelemetry.Instrumentation.AspNet              | 1.20.3        |
+| OpenTelemetry.Instrumentation.AspNetCore.AspNetCoreTraceInstrumentationOptions            | OpenTelemetry.Instrumentation.AspNetCore          | 1.20.2        |
+| OpenTelemetry.Instrumentation.EntityFrameworkCore.EntityFrameworkInstrumentationOptions   | OpenTelemetry.Instrumentation.EntityFrameworkCore | 1.20.2-beta.1 |
+| OpenTelemetry.Instrumentation.GrpcNetClient.GrpcClientTraceInstrumentationOptions         | OpenTelemetry.Instrumentation.GrpcNetClient       | 1.20.1-beta.1 |
+| OpenTelemetry.Instrumentation.Http.HttpClientTraceInstrumentationOptions                  | OpenTelemetry.Instrumentation.Http                | 1.20.2        |
+| OpenTelemetry.Instrumentation.Quartz.QuartzInstrumentationOptions                         | OpenTelemetry.Instrumentation.Quartz              | 1.20.1-beta.1 |
+| OpenTelemetry.Instrumentation.SqlClient.SqlClientTraceInstrumentationOptions              | OpenTelemetry.Instrumentation.SqlClient           | 1.20.2        |
+| OpenTelemetry.Instrumentation.StackExchangeRedis.StackExchangeRedisInstrumentationOptions | OpenTelemetry.Instrumentation.StackExchangeRedis  | 1.20.1-beta.1 |
+| OpenTelemetry.Instrumentation.Wcf.WcfInstrumentationOptions                               | OpenTelemetry.Instrumentation.Wcf                 | 1.20.1-beta.2 |
 
 ### Metrics
 
 | Options type                                                             | NuGet package                                  | NuGet version |
 |--------------------------------------------------------------------------|------------------------------------------------|---------------|
-| OpenTelemetry.Metrics.MetricReaderOptions                                | OpenTelemetry                                  | 1.19.1        |
-| OpenTelemetry.Exporter.ConsoleExporterOptions                            | OpenTelemetry.Exporter.Console                 | 1.19.1        |
-| OpenTelemetry.Exporter.PrometheusExporterOptions                         | OpenTelemetry.Exporter.Prometheus.HttpListener | 1.19.1-beta.1 |
-| OpenTelemetry.Exporter.OtlpExporterOptions                               | OpenTelemetry.Exporter.OpenTelemetryProtocol   | 1.19.1        |
-| OpenTelemetry.Instrumentation.AspNet.AspNetMetricsInstrumentationOptions | OpenTelemetry.Instrumentation.AspNet           | 1.19.0        |
-| OpenTelemetry.Instrumentation.Runtime.RuntimeInstrumentationOptions      | OpenTelemetry.Instrumentation.Runtime          | 1.19.0        |
+| OpenTelemetry.Metrics.MetricReaderOptions                                | OpenTelemetry                                  | 1.20.1        |
+| OpenTelemetry.Exporter.ConsoleExporterOptions                            | OpenTelemetry.Exporter.Console                 | 1.20.1        |
+| OpenTelemetry.Exporter.PrometheusExporterOptions                         | OpenTelemetry.Exporter.Prometheus.HttpListener | 1.20.1-beta.1 |
+| OpenTelemetry.Exporter.OtlpExporterOptions                               | OpenTelemetry.Exporter.OpenTelemetryProtocol   | 1.20.1        |
+| OpenTelemetry.Instrumentation.AspNet.AspNetMetricsInstrumentationOptions | OpenTelemetry.Instrumentation.AspNet           | 1.20.3        |
 
 ### Logs
 
 | Options type                                  | NuGet package                                | NuGet version |
 |-----------------------------------------------|----------------------------------------------|---------------|
-| OpenTelemetry.Logs.OpenTelemetryLoggerOptions | OpenTelemetry                                | 1.19.1        |
-| OpenTelemetry.Exporter.ConsoleExporterOptions | OpenTelemetry.Exporter.Console               | 1.19.1        |
-| OpenTelemetry.Exporter.OtlpExporterOptions    | OpenTelemetry.Exporter.OpenTelemetryProtocol | 1.19.1        |
+| OpenTelemetry.Logs.OpenTelemetryLoggerOptions | OpenTelemetry                                | 1.20.1        |
+| OpenTelemetry.Exporter.ConsoleExporterOptions | OpenTelemetry.Exporter.Console               | 1.20.1        |
+| OpenTelemetry.Exporter.OtlpExporterOptions    | OpenTelemetry.Exporter.OpenTelemetryProtocol | 1.20.1        |
 
 ### OpAMP
 
-| Settings type                                           | NuGet package              | NuGet version |
-|---------------------------------------------------------|----------------------------|---------------|
-| OpenTelemetry.OpAmp.Client.Settings.OpAmpClientSettings | OpenTelemetry.OpAmp.Client | 0.7.0-alpha.2 |
+| Settings type                                           | NuGet package              | NuGet version  |
+|---------------------------------------------------------|----------------------------|----------------|
+| OpenTelemetry.OpAmp.Client.Settings.OpAmpClientSettings | OpenTelemetry.OpAmp.Client | 0.10.0-alpha.1 |
 
 ## Requirements
 

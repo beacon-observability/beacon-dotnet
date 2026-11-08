@@ -8,8 +8,7 @@ using OpenTelemetry.AutoInstrumentation.Diagnostics;
 using OpenTelemetry.AutoInstrumentation.Instrumentations.NoCode;
 using OpenTelemetry.AutoInstrumentation.Loading;
 using OpenTelemetry.AutoInstrumentation.Logging;
-using OpenTelemetry.AutoInstrumentation.PluginApi.ContinuousProfiling;
-using OpenTelemetry.AutoInstrumentation.PluginApi.SelectiveSampling;
+using OpenTelemetry.AutoInstrumentation.OpAmp;
 using OpenTelemetry.AutoInstrumentation.Plugins;
 using OpenTelemetry.AutoInstrumentation.Security;
 using OpenTelemetry.AutoInstrumentation.Util;
@@ -26,6 +25,8 @@ internal static class Instrumentation
 {
     private static readonly IOtelLogger Logger = OtelLogging.GetLogger();
     private static readonly LazyInstrumentationLoader LazyInstrumentationLoader = new();
+    private static readonly ContinuousProfilerManager ContinuousProfiler = new(() => Volatile.Read(ref _isExiting) != 0);
+    private static readonly OpAmpLoader OpAmpClientLoader = new();
 
     private static readonly Lazy<LoggerProvider?> LoggerProviderFactory = new(InitializeLoggerProvider, true);
 
@@ -40,15 +41,7 @@ internal static class Instrumentation
 
     private static PluginManager? _pluginManager;
 
-    private static SampleExporter? _sampleExporter;
-    private static SampleExporterBuilder? _sampleExporterBuilder;
-
-#if NETFRAMEWORK
-    private static CanaryThreadManager? _canaryThreadManager;
-#endif
-
     internal static SecurityLocalOutput? LocalSecurityOutput => _securityLocalOutput;
-
     internal static LoggerProvider? LoggerProvider
     {
         get => LoggerProviderFactory.Value;
@@ -122,7 +115,7 @@ internal static class Instrumentation
 
             if (profilerEnabled)
             {
-                TryInitializeContinuousProfiling();
+                ContinuousProfiler.Initialize(_pluginManager!);
             }
             else
             {
@@ -198,26 +191,25 @@ internal static class Instrumentation
 
         if (GeneralSettings.Value.ProfilerEnabled)
         {
-            RegisterDirectBytecodeInstrumentations(InstrumentationDefinitions.GetAllDefinitions());
+            RegisterSharedBytecodeInstrumentations(InstrumentationDefinitions.GetSharedDefinitions());
+
             if (NoCodeSettings.Value.Enabled)
             {
                 NoCodeIntegrationHelper.NoCodeEntries = NoCodeSettings.Value.InstrumentedMethods;
-                RegisterBytecodeInstrumentations(NoCodeSettings.Value.GetDirectPayload(), "direct, no-code", NativeMethods.AddInstrumentations);
+                RegisterSharedBytecodeInstrumentations(NoCodeSettings.Value.GetDirectPayload());
             }
 
             try
             {
                 foreach (var payload in _pluginManager.GetAllDefinitionsPayloads())
                 {
-                    RegisterDirectBytecodeInstrumentations(payload);
+                    RegisterSharedBytecodeInstrumentations(payload);
                 }
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, "Exception occurred while registering instrumentations from plugins.");
             }
-
-            RegisterBytecodeDerivedInstrumentations(InstrumentationDefinitions.GetDerivedDefinitions());
         }
         else
         {
@@ -229,11 +221,12 @@ internal static class Instrumentation
             OpenTracingHelper.EnableOpenTracing(_tracerProvider);
         }
 
-        if (OpAmpSettings.Value.OpAmpClientEnabled)
+        var opAmpClientEnabled = OpAmpSettings.Value.OpAmpClientEnabled;
+        if (opAmpClientEnabled)
         {
             var resources = ResourceHelper.AggregateResources(_tracerProvider, _meterProvider, LoggerProvider);
 
-            OpAmpHelper.EnableOpAmpClient(resources, OpAmpSettings.Value, _pluginManager);
+            OpAmpClientLoader.PrepareOpAmpClient(resources, OpAmpSettings.Value, _pluginManager);
         }
 
         _securityLocalOutput = GeneralSettings.Value.SetupSdk ? SecurityLocalOutput.TryStart(Environment.GetEnvironmentVariable) : null;
@@ -241,141 +234,11 @@ internal static class Instrumentation
 
         // Notify plugins all initialization is done
         _pluginManager.Initialized();
-    }
 
-    private static void TryInitializeContinuousProfiling()
-    {
-        try
+        if (opAmpClientEnabled)
         {
-            InitializeSampling();
+            OpAmpClientLoader.StartOpAmpClient();
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Failed to initialize continuous profiling.");
-        }
-    }
-
-    private static void InitializeSampling()
-    {
-        var config = _pluginManager!.GetFirstContinuousProfilerConfiguration();
-        var threadSamplingEnabled = config.ThreadSamplingEnabled;
-        var allocationSamplingEnabled = config.AllocationSamplingEnabled;
-        Logger.Debug($"Continuous profiling configuration: Thread sampling enabled: {threadSamplingEnabled}, thread sampling interval: {config.ThreadSamplingInterval}, allocation sampling enabled: {allocationSamplingEnabled}, max memory samples per minute: {config.MaxMemorySamplesPerMinute}, export interval: {config.ExportInterval}, export timeout: {config.ExportTimeout}, continuous profiler exporter: {config.Exporter?.GetType()}");
-
-        if (threadSamplingEnabled || allocationSamplingEnabled)
-        {
-            if (config.Exporter == null)
-            {
-                Logger.Warning("Continuous profiler exporter is not configured. Feature will not be enabled.");
-                return;
-            }
-
-            if (!TryInitializeContinuousSamplingExport(config.Exporter, config.ThreadSamplingEnabled, config.AllocationSamplingEnabled, config.ExportInterval, config.ExportTimeout))
-            {
-                return;
-            }
-        }
-
-        uint selectiveSamplingInterval = 0;
-        var selectiveSamplingConfig = _pluginManager.GetFirstSelectiveSamplingConfiguration();
-        if (selectiveSamplingConfig != null)
-        {
-            if (selectiveSamplingConfig.SamplingInterval == 0 ||
-                selectiveSamplingConfig.ExportInterval <= TimeSpan.Zero ||
-                selectiveSamplingConfig.ExportTimeout <= TimeSpan.Zero ||
-                selectiveSamplingConfig.Exporter == null)
-            {
-                Logger.Warning("Invalid selective sampling configuration. Feature will not be enabled.");
-            }
-            else
-            {
-                Logger.Debug(
-                    $"Selective sampling configuration: sampling interval: {selectiveSamplingConfig.SamplingInterval}, export interval: {selectiveSamplingConfig.ExportInterval}, export timeout: {selectiveSamplingConfig.ExportTimeout}, samples exporter: {selectiveSamplingConfig.Exporter.GetType()}");
-                selectiveSamplingInterval = selectiveSamplingConfig.SamplingInterval;
-                if (!TryInitializeSelectedThreadSamplingExport(selectiveSamplingConfig))
-                {
-                    return;
-                }
-            }
-        }
-
-        if (!threadSamplingEnabled && !allocationSamplingEnabled && selectiveSamplingConfig == null)
-        {
-            // No sampling requested.
-            return;
-        }
-
-        var selectiveSamplingEnabled = selectiveSamplingInterval != 0;
-
-        if (threadSamplingEnabled && selectiveSamplingEnabled)
-        {
-            if (config.ThreadSamplingInterval <= selectiveSamplingInterval)
-            {
-                Logger.Warning($"Continuous sampling interval must be higher than selective sampling interval. Selective sampling interval: {selectiveSamplingInterval}, continuous sampling interval: {config.ThreadSamplingInterval}");
-                return;
-            }
-
-            if (config.ThreadSamplingInterval % selectiveSamplingInterval != 0)
-            {
-                Logger.Warning($"Continuous sampling interval must be a multiple of selective sampling interval. Selective sampling interval: {selectiveSamplingInterval}, continuous sampling interval: {config.ThreadSamplingInterval}");
-                return;
-            }
-        }
-
-        NativeMethods.ConfigureNativeContinuousProfiler(threadSamplingEnabled, config.ThreadSamplingInterval, allocationSamplingEnabled, config.MaxMemorySamplesPerMinute, selectiveSamplingInterval);
-#if NETFRAMEWORK
-        // On .NET Framework, we need a dedicated canary thread for seeded stack walking
-        _canaryThreadManager = new CanaryThreadManager();
-        if (!_canaryThreadManager.Start(TimeSpan.FromSeconds(5)))
-        {
-            Logger.Error("Failed to start canary thread. Continuous profiling will not be enabled.");
-            _canaryThreadManager.Dispose();
-            _canaryThreadManager = null;
-            return;
-        }
-
-        Logger.Information("Canary thread started successfully for .NET Framework profiling.");
-#endif
-        _sampleExporter = _sampleExporterBuilder?.Build();
-    }
-
-    private static bool TryInitializeSelectedThreadSamplingExport(SelectiveSamplerConfiguration configuration)
-    {
-        InitializeBufferProcessing(configuration.ExportInterval, configuration.ExportTimeout);
-
-        _sampleExporterBuilder?.AddHandler(SampleType.SelectedThreads, configuration.Exporter!.ExportSelectedThreadSamples, configuration.ExportTimeout);
-        return true;
-    }
-
-    private static bool TryInitializeContinuousSamplingExport(
-        IContinuousProfilerExporter exporter,
-        bool threadSamplingEnabled,
-        bool allocationSamplingEnabled,
-        TimeSpan exportInterval,
-        TimeSpan exportTimeout)
-    {
-        InitializeBufferProcessing(exportInterval, exportTimeout);
-
-        if (threadSamplingEnabled)
-        {
-            _sampleExporterBuilder?.AddHandler(SampleType.Continuous, exporter.ExportThreadSamples, exportTimeout);
-        }
-
-        if (allocationSamplingEnabled)
-        {
-            _sampleExporterBuilder?.AddHandler(SampleType.Allocation, exporter.ExportAllocationSamples, exportTimeout);
-        }
-
-        return true;
-    }
-
-    private static void InitializeBufferProcessing(TimeSpan exportInterval, TimeSpan exportTimeout)
-    {
-        _sampleExporterBuilder ??= new SampleExporterBuilder();
-
-        _sampleExporterBuilder
-            .SetExportInterval(exportInterval)
-            .SetExportTimeout(exportTimeout);
     }
 
     private static LoggerProvider? InitializeLoggerProvider()
@@ -413,6 +276,25 @@ internal static class Instrumentation
         return null;
     }
 
+    private static void RegisterSharedBytecodeInstrumentations(InstrumentationDefinitions.SharedPayload payload)
+    {
+        try
+        {
+            Logger.Debug("Sending shared CallTarget integration definitions to native library.");
+            var count = NativeMethods.RegisterCallTargetDefinitions(payload.DefinitionsId, payload.Definitions, uint.MaxValue);
+            Logger.Information("The profiler has been initialized with {0} shared definitions for {1}.", count, payload.DefinitionsId);
+        }
+        catch (EntryPointNotFoundException)
+        {
+            Logger.Information("Native profiler does not support shared CallTarget definitions.");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Exception occurred while registering shared CallTarget definitions.");
+        }
+    }
+
+    // V1 registration is intentionally retained, but unused, to simplify future upstream synchronization.
     private static void RegisterDirectBytecodeInstrumentations(InstrumentationDefinitions.Payload payload)
     {
         RegisterBytecodeInstrumentations(payload, "direct", NativeMethods.AddInstrumentations);
@@ -423,17 +305,17 @@ internal static class Instrumentation
         RegisterBytecodeInstrumentations(payload, "derived", NativeMethods.AddDerivedInstrumentations);
     }
 
+    private static void RegisterBytecodeInterfaceInstrumentations(InstrumentationDefinitions.Payload payload)
+    {
+        RegisterBytecodeInstrumentations(payload, "interface", NativeMethods.AddInterfaceInstrumentations);
+    }
+
     private static void RegisterBytecodeInstrumentations(InstrumentationDefinitions.Payload payload, string type, Action<string, NativeCallTargetDefinition[]> register)
     {
         try
         {
             Logger.Debug($"Sending CallTarget {type} integration definitions to native library.");
             register(payload.DefinitionsId, payload.Definitions);
-            foreach (var def in payload.Definitions)
-            {
-                def.Dispose();
-            }
-
             Logger.Information("The profiler has been initialized with {0} {1} definitions for {2}.", payload.Definitions.Length, type, payload.DefinitionsId);
         }
         catch (Exception ex)
@@ -581,17 +463,13 @@ internal static class Instrumentation
 
         try
         {
-            OpAmpHelper.StopOpAmpClientIfRunning(_pluginManager);
+            OpAmpClientLoader.StopOpAmpClientIfRunning();
 
             _securityRuntime?.Dispose();
             _securityLocalOutput?.Dispose();
 
             LazyInstrumentationLoader?.Dispose();
-            _sampleExporter?.Dispose();
-
-#if NETFRAMEWORK
-            _canaryThreadManager?.Dispose();
-#endif
+            ContinuousProfiler.Dispose();
 
             _tracerProvider?.Dispose();
             _meterProvider?.Dispose();
@@ -601,6 +479,8 @@ internal static class Instrumentation
             }
 
             _sdkEventListener?.Dispose();
+
+            NativeCallTargetUnmanagedMemoryHelper.Free();
 
             Logger.Information("OpenTelemetry Automatic Instrumentation exit.");
         }

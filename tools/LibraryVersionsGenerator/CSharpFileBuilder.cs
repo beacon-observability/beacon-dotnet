@@ -21,7 +21,7 @@ internal abstract class CSharpFileBuilder
 //     re-run the LibraryVersionsGenerator project in Visual Studio.
 // 
 //     Changes to this file may cause incorrect behavior and will be lost if
-//     the code is regenerated. 
+//     the code is regenerated.
 // </auto-generated>
 //------------------------------------------------------------------------------
 ");
@@ -67,7 +67,7 @@ internal abstract class CSharpFileBuilder
 
     public abstract CSharpFileBuilder AddVersion(string version, string[] supportedFrameworks, string[] supportedPlatforms);
 
-    public abstract CSharpFileBuilder AddVersionWithDependencies(string version, Dictionary<string, string> dependencies, string[] supportedFrameworks, string[] supportedPlatforms);
+    public abstract CSharpFileBuilder AddVersionWithMetadata(string version, Dictionary<string, string> metadata, string[] supportedFrameworks, string[] supportedPlatforms);
 
     public abstract CSharpFileBuilder EndTestPackage();
 

@@ -21,49 +21,58 @@ internal partial class PluginManager
 
     public PluginManager(PluginsSettings settings)
     {
-        var plugins = new Dictionary<Type, IPlugin>();
+        var plugins = new List<(Type Type, IPlugin Instance)>();
+        var pluginTypes = new HashSet<Type>();
 
         foreach (var assemblyQualifiedName in settings.Plugins)
         {
-            var type = Type.GetType(assemblyQualifiedName, throwOnError: true)!;
-
-            // Ensure type implements IPlugin
-            if (!typeof(IPlugin).IsAssignableFrom(type))
+            try
             {
-                Logger.Warning($"Type '{type.FullName}' does not implement {nameof(IPlugin)}.");
-                continue;
-            }
+                var type = Type.GetType(assemblyQualifiedName, throwOnError: true)!;
 
-            // Ensure type is concrete
-            if (type.IsAbstract || type.IsInterface)
+                // Ensure type implements IPlugin
+                if (!typeof(IPlugin).IsAssignableFrom(type))
+                {
+                    Logger.Warning($"Type '{type.FullName}' does not implement {nameof(IPlugin)}.");
+                    continue;
+                }
+
+                // Ensure type is concrete
+                if (type.IsAbstract || type.IsInterface)
+                {
+                    Logger.Warning($"Type '{type.FullName}' cannot be instantiated.");
+                    continue;
+                }
+
+                if (pluginTypes.Contains(type))
+                {
+                    continue;
+                }
+
+                if (!HasDefaultConstructor(type))
+                {
+                    Logger.Warning($"Type '{type.FullName}' cannot be instantiated. No public parameterless constructor.");
+                    continue;
+                }
+
+                var instance = Activator.CreateInstance(type);
+
+                if (instance is not IPlugin plugin)
+                {
+                    Logger.Warning($"Failed to create plugin '{type.FullName}'.");
+                    continue;
+                }
+
+                pluginTypes.Add(type);
+                plugins.Add((type, plugin));
+            }
+            catch (Exception ex) when (!settings.FailFast)
             {
-                Logger.Warning($"Type '{type.FullName}' cannot be instantiated.");
-                continue;
+                Logger.Error(ex, "Failed to initialize plugin type '{0}'. Plugin will be skipped.", assemblyQualifiedName);
             }
-
-            if (plugins.ContainsKey(type))
-            {
-                continue;
-            }
-
-            if (!HasDefaultConstructor(type))
-            {
-                Logger.Warning($"Type '{type.FullName}' cannot be instantiated. No public parameterless constructor.");
-                continue;
-            }
-
-            var instance = Activator.CreateInstance(type);
-
-            if (instance is not IPlugin plugin)
-            {
-                Logger.Warning($"Failed to create plugin '{type.FullName}'.");
-                continue;
-            }
-
-            plugins.Add(type, plugin);
         }
 
-        _plugins = [.. plugins.Select(it => (it.Key, it.Value))];
+        _plugins = plugins;
         _hasTelemetryPlugins = HasTelemetryPlugins(_plugins);
     }
 
@@ -85,16 +94,16 @@ internal partial class PluginManager
     /// The contacts is based on internal classes and InternalsVisibleTo attributes. It should be refactored before supporting it.
     /// </summary>
     /// <returns>List of payloads.</returns>
-    public IEnumerable<InstrumentationDefinitions.Payload> GetAllDefinitionsPayloads()
+    public IEnumerable<InstrumentationDefinitions.SharedPayload> GetAllDefinitionsPayloads()
     {
-        var payloads = new List<InstrumentationDefinitions.Payload>();
+        var payloads = new List<InstrumentationDefinitions.SharedPayload>();
 
         foreach (var plugin in _plugins)
         {
             var mi = plugin.Type.GetMethod("GetAllDefinitionsPayload", BindingFlags.NonPublic | BindingFlags.Instance);
             if (mi is not null)
             {
-                if (mi.Invoke(plugin.Instance, null) is InstrumentationDefinitions.Payload payload)
+                if (mi.Invoke(plugin.Instance, null) is InstrumentationDefinitions.SharedPayload payload)
                 {
                     payloads.Add(payload);
                 }
