@@ -42,6 +42,7 @@ internal static class Instrumentation
     private static PluginManager? _pluginManager;
 
     internal static SecurityLocalOutput? LocalSecurityOutput => _securityLocalOutput;
+
     internal static LoggerProvider? LoggerProvider
     {
         get => LoggerProviderFactory.Value;

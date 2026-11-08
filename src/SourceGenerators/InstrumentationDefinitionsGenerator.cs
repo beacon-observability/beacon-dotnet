@@ -123,6 +123,7 @@ internal static partial class InstrumentationDefinitions
                     0 => $"tracerSettings.TracesEnabled && tracerSettings.EnabledInstrumentations.Contains(TracerInstrumentation.{target.IntegrationName})",
                     1 => $"metricSettings.MetricsEnabled && metricSettings.EnabledInstrumentations.Contains(MetricInstrumentation.{target.IntegrationName})",
                     2 => $"logSettings.LogsEnabled && logSettings.EnabledInstrumentations.Contains(LogInstrumentation.{target.IntegrationName})",
+                    3 => "OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare()",
                     _ => throw new InvalidOperationException($"Unknown signal type: {target.SignalType}"),
                 };
                 sb.Append("            if (").Append(condition).AppendLine(")")
