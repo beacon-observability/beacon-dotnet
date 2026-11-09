@@ -24,6 +24,10 @@ internal static partial class InstrumentationDefinitions
             {
                 categories |= 1u;
             }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
             if (categories != 0)
             {
                 nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common.DbCommand"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ExecuteDbDataReaderAsync"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Threading.Tasks.Task`1[System.Data.Common.DbDataReader]", "System.Data.CommandBehavior", "System.Threading.CancellationToken"), 3, 4, 0, 0, 11, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteDbDataReaderAsyncIntegration"), 1, categories));
@@ -34,6 +38,10 @@ internal static partial class InstrumentationDefinitions
             if (tracerSettings.TracesEnabled && tracerSettings.EnabledInstrumentations.Contains(TracerInstrumentation.AdoNet))
             {
                 categories |= 1u;
+            }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
             }
             if (categories != 0)
             {
@@ -46,6 +54,10 @@ internal static partial class InstrumentationDefinitions
             {
                 categories |= 1u;
             }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
             if (categories != 0)
             {
                 nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("netstandard"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common.DbCommand"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ExecuteDbDataReaderAsync"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Threading.Tasks.Task`1[System.Data.Common.DbDataReader]", "System.Data.CommandBehavior", "System.Threading.CancellationToken"), 3, 2, 0, 0, 2, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteDbDataReaderAsyncIntegration"), 1, categories));
@@ -56,6 +68,10 @@ internal static partial class InstrumentationDefinitions
             if (tracerSettings.TracesEnabled && tracerSettings.EnabledInstrumentations.Contains(TracerInstrumentation.Sqlite))
             {
                 categories |= 1u;
+            }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
             }
             if (categories != 0)
             {
@@ -68,6 +84,10 @@ internal static partial class InstrumentationDefinitions
             {
                 categories |= 1u;
             }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
             if (categories != 0)
             {
                 nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common.DbCommand"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ExecuteDbDataReader"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Data.Common.DbDataReader", "System.Data.CommandBehavior"), 2, 4, 0, 0, 11, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteDbDataReaderIntegration"), 1, categories));
@@ -78,6 +98,10 @@ internal static partial class InstrumentationDefinitions
             if (tracerSettings.TracesEnabled && tracerSettings.EnabledInstrumentations.Contains(TracerInstrumentation.AdoNet))
             {
                 categories |= 1u;
+            }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
             }
             if (categories != 0)
             {
@@ -90,6 +114,10 @@ internal static partial class InstrumentationDefinitions
             {
                 categories |= 1u;
             }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
             if (categories != 0)
             {
                 nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("netstandard"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common.DbCommand"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ExecuteDbDataReader"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Data.Common.DbDataReader", "System.Data.CommandBehavior"), 2, 2, 0, 0, 2, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteDbDataReaderIntegration"), 1, categories));
@@ -100,6 +128,10 @@ internal static partial class InstrumentationDefinitions
             if (tracerSettings.TracesEnabled && tracerSettings.EnabledInstrumentations.Contains(TracerInstrumentation.Sqlite))
             {
                 categories |= 1u;
+            }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
             }
             if (categories != 0)
             {
@@ -112,6 +144,10 @@ internal static partial class InstrumentationDefinitions
             {
                 categories |= 1u;
             }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
             if (categories != 0)
             {
                 nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common.DbCommand"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ExecuteNonQueryAsync"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Threading.Tasks.Task`1<System.Int32>", "System.Threading.CancellationToken"), 2, 4, 0, 0, 11, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteNonQueryAsyncIntegration"), 1, categories));
@@ -122,6 +158,10 @@ internal static partial class InstrumentationDefinitions
             if (tracerSettings.TracesEnabled && tracerSettings.EnabledInstrumentations.Contains(TracerInstrumentation.AdoNet))
             {
                 categories |= 1u;
+            }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
             }
             if (categories != 0)
             {
@@ -134,6 +174,10 @@ internal static partial class InstrumentationDefinitions
             {
                 categories |= 1u;
             }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
             if (categories != 0)
             {
                 nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("netstandard"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common.DbCommand"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ExecuteNonQueryAsync"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Threading.Tasks.Task`1<System.Int32>", "System.Threading.CancellationToken"), 2, 2, 0, 0, 2, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteNonQueryAsyncIntegration"), 1, categories));
@@ -144,6 +188,10 @@ internal static partial class InstrumentationDefinitions
             if (tracerSettings.TracesEnabled && tracerSettings.EnabledInstrumentations.Contains(TracerInstrumentation.AdoNet))
             {
                 categories |= 1u;
+            }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
             }
             if (categories != 0)
             {
@@ -156,6 +204,10 @@ internal static partial class InstrumentationDefinitions
             {
                 categories |= 1u;
             }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
             if (categories != 0)
             {
                 nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common.DbCommand"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ExecuteNonQuery"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Int32"), 1, 2, 0, 0, 4, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteNonQueryIntegration"), 1, categories));
@@ -166,6 +218,10 @@ internal static partial class InstrumentationDefinitions
             if (tracerSettings.TracesEnabled && tracerSettings.EnabledInstrumentations.Contains(TracerInstrumentation.AdoNet))
             {
                 categories |= 1u;
+            }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
             }
             if (categories != 0)
             {
@@ -178,6 +234,10 @@ internal static partial class InstrumentationDefinitions
             {
                 categories |= 1u;
             }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
             if (categories != 0)
             {
                 nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Devart.Data.Oracle"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Devart.Data.Oracle.OracleCommand"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ExecuteNonQuery"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Int32"), 1, 9, 0, 0, 11, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteNonQueryIntegration"), 0, categories));
@@ -188,6 +248,10 @@ internal static partial class InstrumentationDefinitions
             if (tracerSettings.TracesEnabled && tracerSettings.EnabledInstrumentations.Contains(TracerInstrumentation.AdoNet))
             {
                 categories |= 1u;
+            }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
             }
             if (categories != 0)
             {
@@ -200,6 +264,10 @@ internal static partial class InstrumentationDefinitions
             {
                 categories |= 1u;
             }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
             if (categories != 0)
             {
                 nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common.DbCommand"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ExecuteScalarAsync"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Threading.Tasks.Task`1<System.Object>", "System.Threading.CancellationToken"), 2, 4, 0, 0, 4, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteScalarAsyncIntegration"), 1, categories));
@@ -210,6 +278,10 @@ internal static partial class InstrumentationDefinitions
             if (tracerSettings.TracesEnabled && tracerSettings.EnabledInstrumentations.Contains(TracerInstrumentation.AdoNet))
             {
                 categories |= 1u;
+            }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
             }
             if (categories != 0)
             {
@@ -222,6 +294,10 @@ internal static partial class InstrumentationDefinitions
             {
                 categories |= 1u;
             }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
             if (categories != 0)
             {
                 nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common.DbCommand"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ExecuteScalar"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Object"), 1, 4, 0, 0, 11, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteScalarIntegration"), 1, categories));
@@ -233,6 +309,10 @@ internal static partial class InstrumentationDefinitions
             {
                 categories |= 1u;
             }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
             if (categories != 0)
             {
                 nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Data.Common.DbCommand"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ExecuteScalar"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Object"), 1, 2, 0, 0, 4, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Instrumentations.AdoNet.Integrations.CommandExecuteScalarIntegration"), 1, categories));
@@ -243,6 +323,10 @@ internal static partial class InstrumentationDefinitions
             if (tracerSettings.TracesEnabled && tracerSettings.EnabledInstrumentations.Contains(TracerInstrumentation.AdoNet))
             {
                 categories |= 1u;
+            }
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
             }
             if (categories != 0)
             {
@@ -1043,6 +1127,116 @@ internal static partial class InstrumentationDefinitions
             if (categories != 0)
             {
                 nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.ServiceModel.Primitives"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.ServiceModel.ChannelFactory"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("InitializeEndpoint"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Void", "System.ServiceModel.Channels.Binding", "System.ServiceModel.EndpointAddress"), 3, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Instrumentations.Wcf.Client.WcfClientIntegration"), 0, categories));
+            }
+        }
+        {
+            uint categories = 0;
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
+            if (categories != 0)
+            {
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Microsoft.AspNetCore.Hosting"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Microsoft.AspNetCore.Hosting.HostingApplication"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ProcessRequestAsync"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Threading.Tasks.Task", "Context"), 2, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.AspNetCoreRequestIntegration"), 0, categories));
+            }
+        }
+        {
+            uint categories = 0;
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
+            if (categories != 0)
+            {
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Private.CoreLib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.IO.File"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ReadAllText"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String"), 2, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.FileReadAllTextIntegration"), 0, categories));
+            }
+        }
+        {
+            uint categories = 0;
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
+            if (categories != 0)
+            {
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Net.Http"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Net.Http.HttpMessageInvoker"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("SendAsync"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Threading.Tasks.Task`1[System.Net.Http.HttpResponseMessage]", "System.Net.Http.HttpRequestMessage", "System.Threading.CancellationToken"), 3, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.HttpMessageInvokerSendIntegration"), 0, categories));
+            }
+        }
+        {
+            uint categories = 0;
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
+            if (categories != 0)
+            {
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Diagnostics.Process"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Diagnostics.Process"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Start"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Boolean"), 1, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.ProcessStartIntegration"), 0, categories));
+            }
+        }
+        {
+            uint categories = 0;
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
+            if (categories != 0)
+            {
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Private.CoreLib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.String"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Concat"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String", "System.String"), 3, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.StringConcat2Integration"), 0, categories));
+            }
+        }
+        {
+            uint categories = 0;
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
+            if (categories != 0)
+            {
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("mscorlib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.String"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Concat"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String", "System.String"), 3, 4, 0, 0, 4, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.StringConcat2Integration"), 0, categories));
+            }
+        }
+        {
+            uint categories = 0;
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
+            if (categories != 0)
+            {
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Private.CoreLib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.String"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Concat"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String", "System.String", "System.String"), 4, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.StringConcat3Integration"), 0, categories));
+            }
+        }
+        {
+            uint categories = 0;
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
+            if (categories != 0)
+            {
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("mscorlib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.String"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Concat"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String", "System.String", "System.String"), 4, 4, 0, 0, 4, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.StringConcat3Integration"), 0, categories));
+            }
+        }
+        {
+            uint categories = 0;
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
+            if (categories != 0)
+            {
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Private.CoreLib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.String"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Concat"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String", "System.String", "System.String", "System.String"), 5, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.StringConcat4Integration"), 0, categories));
+            }
+        }
+        {
+            uint categories = 0;
+            if (OpenTelemetry.AutoInstrumentation.Security.SecurityRuntime.Enabled && OpenTelemetry.AutoInstrumentation.Security.StringConcatHooks.Prepare())
+            {
+                categories |= 8u;
+            }
+            if (categories != 0)
+            {
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("mscorlib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.String"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Concat"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String", "System.String", "System.String", "System.String"), 5, 4, 0, 0, 4, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.StringConcat4Integration"), 0, categories));
             }
         }
         return nativeCallTargetDefinitions.ToArray();
