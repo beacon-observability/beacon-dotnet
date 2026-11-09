@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Runtime.InteropServices;
 using OpenTelemetry.AutoInstrumentation.Tests.Util;
 
 namespace OpenTelemetry.AutoInstrumentation.Tests.Security;
@@ -19,16 +20,13 @@ public class SecurityDefinitionsTests
         var definitions = InstrumentationDefinitions.GetAllDefinitions().Definitions;
         try
         {
-            var security = definitions.Where(definition => definition.IntegrationType.StartsWith("OpenTelemetry.AutoInstrumentation.Security.", StringComparison.Ordinal)).ToArray();
+            var security = definitions.Where(definition => Marshal.PtrToStringUni(definition.IntegrationType)!.StartsWith("OpenTelemetry.AutoInstrumentation.Security.", StringComparison.Ordinal)).ToArray();
             Assert.Equal(expected, security.Length);
-            Assert.All(security, definition => Assert.True(definition.TargetMethod is "Concat" or "ProcessRequestAsync" or "ReadAllText" or "SendAsync" or "Start"));
+            Assert.All(security, definition => Assert.True(Marshal.PtrToStringUni(definition.TargetMethod) is "Concat" or "ProcessRequestAsync" or "ReadAllText" or "SendAsync" or "Start"));
         }
         finally
         {
-            foreach (var definition in definitions)
-            {
-                definition.Dispose();
-            }
+            NativeCallTargetUnmanagedMemoryHelper.Free();
         }
     }
 }
