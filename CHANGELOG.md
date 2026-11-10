@@ -5,7 +5,7 @@ All notable changes to this component are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This component adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/compare/v1.17.0..HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/compare/v1.19.1..HEAD)
 
 ### Added
 
@@ -26,6 +26,183 @@ This component adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 ### Removed
 
 ### Fixed
+
+## [v1.19.1](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/releases/tag/v1.19.1)
+
+### Changed
+
+- macOS libraries are now built and tested against
+  [macOS Sequoia 15 ARM64](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md).
+
+#### Dependency updates
+
+- Following packages updated
+  - `OpenTelemetry.Instrumentation.Http` from `1.20.1` to `1.20.2`,
+  - `OpenTelemetry.Instrumentation.SqlClient` from `1.20.1` to `1.20.2`,
+  - `OpenTelemetry.Instrumentation.Wcf` from `1.20.1-beta.1` to `1.20.1-beta.2`,
+  - `OpenTelemetry.OpAmp.Client` from `0.9.0-alpha.3` to `0.10.0-alpha.1`,
+  - `OpenTelemetry.Resources.Azure` from `1.20.1-beta.1` to `1.20.2-beta.1`.
+- .NET only, following packages updated
+  - `OpenTelemetry.Instrumentation.AspNetCore` from `1.20.1` to `1.20.2`,
+  - `OpenTelemetry.Instrumentation.EntityFrameworkCore`
+    from `1.20.1-beta.1` to `1.20.2-beta.1`.
+- .NET Framework only, following packages updated
+  - `OpenTelemetry.Instrumentation.AspNet` from `1.20.2` to `1.20.3`,
+  - `OpenTelemetry.Instrumentation.AspNet.TelemetryHttpModule`
+    from `1.20.2` to `1.20.3`.
+
+### Fixed
+
+- Fixed ADO.NET bytecode instrumentation clearing `Activity.Current` after an
+  async command created by a `DbDataSource`. Connection-based attributes are
+  skipped when unavailable. Provider command subclasses, including Npgsql
+  data-source commands, use their provider's instrumentation to avoid duplicate
+  database spans.
+- Fixed ADO.NET SQL sanitization for provider-specific quoting and literal
+  syntax, including SQLite identifiers containing apostrophes. Improved
+  redaction of account names and passwords in SQL statements.
+- Limit string Kafka message keys recorded on spans to 256 characters to prevent
+  oversized keys from being retained until export.
+
+## [v1.19.0](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/releases/tag/v1.19.0)
+
+### Added
+
+- Added bytecode instrumentation support for methods compiled with the experimental
+  .NET runtime-async feature.
+
+### Changed
+
+#### Dependency updates
+
+- Following packages updated
+  - `OpenTelemetry.OpAmp.Client` from `0.9.0-alpha.1` to `0.9.0-alpha.3`.
+- .NET Framework only, following packages updated
+  - `OpenTelemetry.Instrumentation.AspNet` from `1.20.1` to `1.20.2`,
+  - `OpenTelemetry.Instrumentation.AspNet.TelemetryHttpModule`
+    from `1.20.1` to `1.20.2`.
+
+### Fixed
+
+- Fix instrumentation errors and unfinished Kafka `ProduceAsync` spans when no
+  delivery result is available.
+- Reject sequences and mappings supplied for scalar fields in file-based
+  YAML configuration.
+- Apply scalar validation to file-based trace ID sampling ratios, use `1.0` when
+  the ratio is omitted or null, and reject invalid values.
+- Use fallback values for empty environment variables and replace undefined
+  variables without a fallback with an empty value in file-based YAML configuration.
+- Prevent .NET Framework assembly redirection from hanging or reusing stale
+  references when assembly-reference enumeration fails.
+- Improved OpAMP plugin-state report scheduling by coalescing server-requested
+  full-state reports and ensuring at least five seconds between consecutive sends.
+
+## [v1.18.0](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/releases/tag/v1.18.0)
+
+### Added
+
+- Added scripts to standalone distributions that prepare an on-demand
+  `DOTNET_ADDITIONAL_DEPS` and `DOTNET_SHARED_STORE` assembly-conflict
+  workaround from the instrumentation dependencies already included in the
+  distribution. This lets framework-dependent applications make those
+  dependencies available to the .NET host when automatic assembly redirection
+  cannot resolve a conflict.
+
+- Added experimental OpAMP effective configuration reporting for plugins through
+  `IProvideEffectiveConfig` and `IOpAmpClient.NotifyEffectiveConfigChanged()`.
+  See the
+  [plugin documentation](./docs/plugins.md#effective-configuration-reporting).
+
+- Added experimental OpAMP remote configuration status reporting for plugins through
+  `IProvideRemoteConfigStatus` and `IOpAmpClient.NotifyRemoteConfigStatusChanged()`.
+  Plugins can also opt into receiving remote configuration offers. See the
+  [plugin documentation](./docs/plugins.md#remote-configuration-status-reporting).
+
+### Changed
+
+- **Breaking change:** `IContinuousProfilerExporter.ExportThreadSamples` now
+  requires the CPU sampling interval for each batch as a `uint` argument in
+  milliseconds.
+- Reworked the experimental OpAMP plugin lifecycle with pre-start listener
+  registration and manager-owned client lifetime. Only the first configured
+  `IOpAmpPlugin` controls OpAMP. Hardened OpAMP startup and cleanup, including
+  after plugin configuration failure. See the
+  [OpAMP plugin documentation](./docs/plugins.md#opamp).
+
+#### Dependency updates
+
+- Updated [Core components](https://github.com/open-telemetry/opentelemetry-dotnet/blob/core-1.20.1/VERSIONING.md#core-components):
+  [`1.20.1`](https://github.com/open-telemetry/opentelemetry-dotnet/releases/tag/core-1.20.1).
+- Following packages updated
+  - `OpenTelemetry.Exporter.Prometheus.HttpListener`
+    from `1.19.1-beta.1` to `1.20.1-beta.1`,
+  - `OpenTelemetry.Instrumentation.GrpcNetClient`
+    from `1.19.1-beta.1` to `1.20.1-beta.1`,
+  - `OpenTelemetry.Instrumentation.Http` from `1.19.0` to `1.20.1`,
+  - `OpenTelemetry.Instrumentation.Process` from `1.19.0-rc.1` to `1.20.1-rc.1`,
+  - `OpenTelemetry.Instrumentation.Quartz` from `1.19.0-beta.1` to `1.20.1-beta.1`,
+  - `OpenTelemetry.Instrumentation.Runtime` from `1.19.0` to `1.20.1`,
+  - `OpenTelemetry.Instrumentation.SqlClient` from `1.19.0` to `1.20.1`,
+  - `OpenTelemetry.Instrumentation.StackExchangeRedis`
+    from `1.19.0-beta.1` to `1.20.1-beta.1`,
+  - `OpenTelemetry.Instrumentation.Wcf` from `1.19.1-beta.1` to `1.20.1-beta.1`,
+  - `OpenTelemetry.OpAmp.Client` from `0.7.0-alpha.2` to `0.9.0-alpha.1`,
+  - `OpenTelemetry.Shims.OpenTracing` from `1.19.1-beta.1` to `1.20.1-beta.1`,
+  - `OpenTelemetry.Resources.Azure` from `1.19.1-beta.1` to `1.20.1-beta.1`,
+  - `OpenTelemetry.Resources.Container` from `1.19.1-beta.1` to `1.20.1-beta.1`,
+  - `OpenTelemetry.Resources.Host` from `1.19.1-beta.1` to `1.20.1-beta.1`,
+  - `OpenTelemetry.Resources.OperatingSystem`
+    from `1.19.1-beta.1` to `1.20.1-beta.1`,
+  - `OpenTelemetry.Resources.Process` from `1.19.1-rc.1` to `1.20.1-rc.1`,
+  - `OpenTelemetry.Resources.ProcessRuntime`
+    from `1.19.1-beta.1` to `1.20.1-beta.1`.
+- .NET only, following packages updated
+  - `OpenTelemetry.Instrumentation.AspNetCore` from `1.19.0` to `1.20.1`,
+  - `OpenTelemetry.Instrumentation.EntityFrameworkCore`
+    from `1.19.0-beta.1` to `1.20.1-beta.1`.
+- .NET Framework only, following packages updated
+  - `Microsoft.Bcl.AsyncInterfaces` from `10.0.12` to `10.0.14`,
+  - `Microsoft.Extensions.Configuration` from `10.0.12` to `10.0.14`,
+  - `Microsoft.Extensions.Configuration.Abstractions` from `10.0.12` to `10.0.14`,
+  - `Microsoft.Extensions.Configuration.Binder` from `10.0.12` to `10.0.14`,
+  - `Microsoft.Extensions.Configuration.EnvironmentVariables`
+    from `10.0.12` to `10.0.14`,
+  - `Microsoft.Extensions.DependencyInjection` from `10.0.12` to `10.0.14`,
+  - `Microsoft.Extensions.DependencyInjection.Abstractions`
+    from `10.0.12` to `10.0.14`,
+  - `Microsoft.Extensions.Diagnostics.Abstractions` from `10.0.12` to `10.0.14`,
+  - `Microsoft.Extensions.Logging` from `10.0.12` to `10.0.14`,
+  - `Microsoft.Extensions.Logging.Abstractions` from `10.0.12` to `10.0.14`,
+  - `Microsoft.Extensions.Logging.Configuration` from `10.0.12` to `10.0.14`,
+  - `Microsoft.Extensions.Options` from `10.0.12` to `10.0.14`,
+  - `Microsoft.Extensions.Options.ConfigurationExtensions`
+    from `10.0.12` to `10.0.14`,
+  - `Microsoft.Extensions.Primitives` from `10.0.12` to `10.0.14`,
+  - `OpenTelemetry.Instrumentation.AspNet` from `1.19.0` to `1.20.1`,
+  - `OpenTelemetry.Instrumentation.AspNet.TelemetryHttpModule`
+    from `1.19.0` to `1.20.1`,
+  - `System.Diagnostics.DiagnosticSource` from `10.0.12` to `10.0.14`,
+  - `System.IO.Pipelines` from `10.0.12` to `10.0.14`,
+  - `System.Text.Encodings.Web` from `10.0.12` to `10.0.14`,
+  - `System.Text.Json` from `10.0.12` to `10.0.14`.
+
+### Removed
+
+- Removed plugin configuration support for `RuntimeInstrumentationOptions`.
+  These options were always a no-op and are deprecated in the
+  `OpenTelemetry.Instrumentation.Runtime` package.
+
+### Fixed
+
+- Fix missing or incomplete SqlClient traces when `System.Data`,
+  `System.Data.SqlClient`, or `Microsoft.Data.SqlClient` is already loaded at
+  startup, including in .NET Framework applications hosted in IIS.
+- Invalid plugin type names no longer stop automatic instrumentation or crash
+  .NET Framework applications unless fail-fast is enabled.
+- Auto-instrumentation messages are no longer written twice to the managed log
+  file, and loader messages are no longer copied into it.
+- Support native profiler assembly redirection for
+  `UnsafeAccessorTypeAttribute` metadata on .NET 10 and later.
 
 ## [v1.17.0](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/releases/tag/v1.17.0)
 
@@ -564,7 +741,7 @@ and runtime, then loads the correct version of dependency assemblies.
   and `OTEL_DOTNET_AUTO_ENTITYFRAMEWORKCORE_SET_DBSTATEMENT_FOR_TEXT`
   These features are always enabled. Statements are sanitized.
 - Support for macOS Ventura 13 x64.
-  macOS libraries are built and tested against [macOS Sonoma 14 arm64](https://github.com/actions/runner-images/blob/main/images/macos/macos-14-arm64-Readme.md).
+  macOS libraries are built and tested against macOS Sonoma 14 arm64.
 
 ### Fixed
 
@@ -1951,5 +2128,5 @@ built on top of [OpenTelemetry .NET](https://github.com/open-telemetry/opentelem
   `OTEL_DOTNET_AUTO_INSTRUMENTATION_PLUGINS`.
 - `OTEL_DOTNET_AUTO_HTTP2UNENCRYPTEDSUPPORT_ENABLED` environment variable
   which enables `System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport`.
-  See the [official Microsoft documentation](https://docs.microsoft.com/en-us/aspnet/core/grpc/troubleshoot?view=aspnetcore-6.0#call-insecure-grpc-services-with-net-core-client)
+  See the [official Microsoft documentation](https://docs.microsoft.com/aspnet/core/grpc/troubleshoot?view=aspnetcore-6.0#call-insecure-grpc-services-with-net-core-client)
   for more details.

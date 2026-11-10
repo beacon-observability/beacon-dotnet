@@ -132,6 +132,28 @@ internal static class Program
         }
 
         syncConsumersModel.BasicCancel(consumerTag);
+
+        Publish(syncConsumersModel, GetTestMessage(), syncConsumersModel.CreateBasicProperties());
+
+        var interfaceConsumer = new SyncImplicitImplementationConsumer(syncConsumersModel);
+
+        using var interfaceMre = new ManualResetEventSlim(false);
+
+        interfaceConsumer.Received += (_, ea) =>
+        {
+            Console.WriteLine("[x] Handling BasicDeliver in SyncImplicitImplementationConsumer.");
+            ProcessReceivedMessage(ea.Body);
+            interfaceMre.Set();
+        };
+
+        var interfaceConsumerTag = syncConsumersModel.BasicConsume(RoutingKey, true, interfaceConsumer);
+        if (!interfaceMre.Wait(DefaultWaitTimeout))
+        {
+            Console.WriteLine("Timed-out waiting for interface callback to complete.");
+            return 1;
+        }
+
+        syncConsumersModel.BasicCancel(interfaceConsumerTag);
         return 0;
     }
 
@@ -168,6 +190,42 @@ internal static class Program
         }
 
         asyncConsumersModel.BasicCancel(asyncConsumerTag);
+
+        Publish(asyncConsumersModel, GetTestMessage(), asyncConsumersModel.CreateBasicProperties());
+
+        var interfaceConsumer = new AsyncExplicitImplementationConsumer(asyncConsumersModel);
+
+        // A same-named public method must not receive the interface instrumentation.
+        interfaceConsumer.HandleBasicDeliver(
+            string.Empty,
+            0,
+            false,
+            string.Empty,
+            RoutingKey,
+            asyncConsumersModel.CreateBasicProperties(),
+#if RABBITMQ_6_0_0_OR_GREATER
+            ReadOnlyMemory<byte>.Empty).GetAwaiter().GetResult();
+#else
+            Array.Empty<byte>()).GetAwaiter().GetResult();
+#endif
+
+        using var interfaceMre = new ManualResetEventSlim(false);
+
+        interfaceConsumer.Received += (_, ea) =>
+        {
+            Console.WriteLine("[x] Handling BasicDeliver in AsyncExplicitImplementationConsumer.");
+            ProcessReceivedMessage(ea.Body);
+            interfaceMre.Set();
+        };
+
+        var interfaceConsumerTag = asyncConsumersModel.BasicConsume(RoutingKey, true, interfaceConsumer);
+        if (!interfaceMre.Wait(DefaultWaitTimeout))
+        {
+            Console.WriteLine("Timed-out waiting for async interface callback to complete.");
+            return 1;
+        }
+
+        asyncConsumersModel.BasicCancel(interfaceConsumerTag);
 
         if (!Close(asyncConsumersModel))
         {

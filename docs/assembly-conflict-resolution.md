@@ -160,6 +160,14 @@ controlled by a version map compiled into the native profiler (see
 and
 [`assembly_redirection_netfx.h`](../src/OpenTelemetry.AutoInstrumentation.Native/assembly_redirection_netfx.h)).
 
+On .NET 10 and later, the profiler also redirects assembly-qualified type names
+stored in `UnsafeAccessorTypeAttribute` metadata when those assemblies appear
+in the same version map. It considers only parameter and return-value attributes
+whose declaring method also has `UnsafeAccessorAttribute`, because that pairing
+is what gives `UnsafeAccessorTypeAttribute` its native-reflection meaning. A
+missing or lower `Version` is raised to the mapped version; an equal or higher
+version is preserved.
+
 > **NOTE**: On .NET, the instrumentation ships the baseline versions of its
 > dependencies for each target framework (for example, for `net8.0` the
 > 8.0.0 versions, for `net9.0` - 9.0.0, etc.) unless known issues
@@ -281,6 +289,70 @@ If setup fails, the isolation is reverted and the runtime falls back to
 executing the application normally (unless fail-fast mode is enabled via
 `OTEL_DOTNET_AUTO_FAIL_FAST`).
 
+## AdditionalDeps and shared-store workaround
+
+For framework-dependent standalone .NET deployments, this supported workaround
+configures the .NET host to include the instrumentation's package dependencies
+during application startup with
+[`DOTNET_ADDITIONAL_DEPS`](https://learn.microsoft.com/dotnet/core/dependency-loading/understanding-assemblyloadcontext#additional-deps)
+and
+[`DOTNET_SHARED_STORE`](https://learn.microsoft.com/dotnet/core/deploying/runtime-store).
+This makes the runtime aware of those dependencies before the application and
+instrumentation begin loading assemblies.
+
+Standalone distributions ship build-time-generated dependency contexts and
+scripts that materialize both host-facing directory structures from the
+contexts and assemblies already present in the distribution. Choose a
+dedicated, writable output directory and run the script before starting the
+application:
+
+```sh
+"$OTEL_DOTNET_AUTO_HOME/generate-additional-deps.sh" \
+  --output /var/lib/otel-dotnet-auto/additional-deps
+```
+
+On Windows, run:
+
+```powershell
+& "$env:OTEL_DOTNET_AUTO_HOME\generate-additional-deps.ps1" `
+    -OutputPath "C:\ProgramData\OpenTelemetry\additional-deps"
+```
+
+Configure the application using the paths printed by the script:
+
+```text
+DOTNET_ADDITIONAL_DEPS=<output>/AdditionalDeps
+DOTNET_SHARED_STORE=<output>/store
+```
+
+This workaround is primarily useful when automatic assembly redirection cannot
+resolve a conflict or must be disabled. If redirection must be disabled for the
+application, configure:
+
+```text
+OTEL_DOTNET_AUTO_REDIRECT_ENABLED=false
+```
+
+Its limitations are inherent to the .NET host mechanism:
+
+- It applies only to framework-dependent standalone .NET applications. It is
+  not used by .NET Framework or self-contained applications. NuGet package
+  deployments resolve their dependencies through the application's NuGet
+  graph and do not need this script.
+- It changes the dependency graph seen by the .NET host, but cannot override
+  every explicit or custom assembly-loading decision. Assemblies loaded from
+  an explicit file path or by a custom `AssemblyLoadContext` may bypass it.
+- The generated store is specific to the architectures, target frameworks,
+  and dependency versions in that standalone distribution. Generate it into
+  a clean output directory after every instrumentation upgrade; do not combine
+  files from different versions.
+- The generated dependency graph applies to the entire application. Validate
+  the application after enabling it, especially when the application directly
+  references different versions of the same dependencies.
+
+If the host still cannot select a compatible version, the final fallback is to
+update or copy compatible dependency versions into the application itself.
+
 ## Known limitations
 
 The resolution strategies described above cover the majority of cases,
@@ -302,11 +374,15 @@ This can happen in the following scenarios:
   `AssemblyLoadContext.Default.LoadFromAssemblyPath` or `Assembly.LoadFrom`
   to load an assembly into the Default ALC.
 
-- **`UnsafeAccessorType` reflection (.NET 10+)**: Code uses
-  `UnsafeAccessorType` attributes in assemblies loaded in the Default ALC;
-  in this case, types bind to the requesting assembly's load context.
-  Once the runtime resolves a type for an `UnsafeAccessor` method in the
-  Default ALC, it cannot interact with a different version loaded elsewhere.
+- **StartupHook-only: `UnsafeAccessorTypeAttribute` reflection (.NET 10+)**:
+  Code uses `UnsafeAccessorTypeAttribute` metadata in assemblies loaded in the
+  Default ALC; in this case, types bind to the requesting assembly's load
+  context.
+  Once the runtime resolves a type for a method annotated with
+  `UnsafeAccessorAttribute` in the Default ALC, it cannot interact with a
+  different version loaded elsewhere.
+  StartupHook-only deployment cannot rewrite this metadata because the native
+  profiler is not attached.
 
 ### StartupHook-only: the customer application is loaded twice
 
@@ -352,12 +428,16 @@ architectures.
 
 ### Native profiler: conflicting version ordering
 
-The native profiler processes assembly references in module-load order.
-If an earlier module has been redirected to the instrumentation's version
-and a later module references a **higher** version than the
-instrumentation ships, the profiler cannot reconcile the two. This is
-logged as an error. In practice this is rare because the instrumentation
-ships the latest versions of its dependencies.
+The native profiler establishes `AssemblyRef` redirection targets as modules
+load. Once an `AssemblyRef` has been rewritten to a target version, a later
+request for a **higher** version cannot change that target retroactively. The
+profiler leaves the later request unchanged and logs the conflict. Runtime
+assembly resolution may still satisfy the request, for example when the higher
+version is available in the TPA list.
+
+`UnsafeAccessorTypeAttribute` metadata is redirected only when its assembly
+qualifier has a missing or lower version; equal or higher versions are left
+unchanged.
 
 ### Unexpected resolution request for a higher version than available
 
@@ -389,10 +469,9 @@ originates from a third-party component — ensure the required assembly
 version is available to the application by adding or upgrading the
 dependency. When the required version is present (either in the TPA list
 or shipped by the instrumentation), the resolver will be able to satisfy
-the request. As a last resort, consider the
-[`DOTNET_ADDITIONAL_DEPS` approach](#last-resort-dotnet_additional_deps-and-the-runtime-store)
-to supply the required version to the runtime before the application
-starts.
+the request. For framework-dependent standalone deployments, consider the
+[AdditionalDeps and shared-store workaround](#additionaldeps-and-shared-store-workaround)
+to supply the required version to the runtime before the application starts.
 
 ## Troubleshooting
 
@@ -403,23 +482,6 @@ starts.
    `COREHOST_TRACEFILE=corehost_verbose_tracing.log` to capture the
    runtime's own assembly-loading decisions.
 3. **Review the native profiler log** — look for
-   `RedirectAssemblyReferences` entries to confirm that IL rewriting
-   happened and which versions were involved.
-
-### Last resort: `DOTNET_ADDITIONAL_DEPS` and the runtime store
-
-If the above strategies do not resolve a conflict — for example, the
-application uses a framework-level assembly that cannot be redirected
-— you can configure the .NET host to include additional dependencies
-at startup using
-[`DOTNET_ADDITIONAL_DEPS`](https://learn.microsoft.com/dotnet/core/dependency-loading/understanding-assemblyloadcontext#additional-deps)
-and
-[`DOTNET_SHARED_STORE`](https://learn.microsoft.com/dotnet/core/deploying/runtime-store)
-environment variables. This approach makes the runtime aware of the
-instrumentation's assemblies before the application starts, avoiding
-version conflicts entirely. However, it requires preparing a
-`.deps.json` file and potentially a shared store layout — a
-significant effort compared to the other deployment options. Consult
-the
-[.NET documentation](https://learn.microsoft.com/dotnet/core/dependency-loading/understanding-assemblyloadcontext)
-for details.
+   `RedirectAssemblyReferences` and `UnsafeAccessorTypeAttributeUpdater`
+   entries to confirm which metadata was rewritten and which versions were
+   involved.

@@ -5,6 +5,8 @@ This file records Beacon .NET product changes only. See the root
 
 ## Unreleased
 
+- Adopted the verified OpenTelemetry source snapshot `4e1ae853b603343d58c3`; Beacon product version remains unchanged.
+
 ## 1.1.1 - 2026-11-04
 
 - Fix release example restoration by pinning the transitive PKCS dependency to

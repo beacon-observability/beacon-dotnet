@@ -44,6 +44,7 @@ partial class Build
                     .SetProperty("OTEL_AUTO_VERSION_MAJOR", major)
                     .SetProperty("OTEL_AUTO_VERSION_MINOR", minor)
                     .SetProperty("OTEL_AUTO_VERSION_PATCH", patch)
+                    .SetProperty("OTEL_AUTO_PRODUCT_VERSION", VersionHelper.GetInformationalVersion())
                     .CombineWith(platforms, (m, platform) => m
                         .SetTargetPlatform(platform)));
             }
@@ -149,9 +150,8 @@ partial class Build
             var project = Solution.GetProjectByName(Projects.Tests.AutoInstrumentationNativeTests);
             var workingDirectory = project.Directory / "bin" / BuildConfiguration.ToString() / Platform.ToString();
             var exePath = workingDirectory / $"{project.Name}.exe";
-            var envVars = new Dictionary<string, string>(){
-                { "OTEL_DOTNET_AUTO_LOG_DIRECTORY", ProfilerTestLogs }
-            };
+            var envVars = EnvironmentInfo.Variables.ToDictionary(x => x.Key, x => x.Value);
+            envVars["OTEL_DOTNET_AUTO_LOG_DIRECTORY"] = ProfilerTestLogs;
             var testExe = ToolResolver.GetTool(exePath);
 
             testExe($"--gtest_output=xml", workingDirectory: workingDirectory, environmentVariables: envVars);

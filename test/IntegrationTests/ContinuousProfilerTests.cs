@@ -116,6 +116,59 @@ public class ContinuousProfilerTests : TestHelper
         collector.ResourceExpector.AssertExpectations();
     }
 
+    [Fact]
+    [Trait("Category", "EndToEnd")]
+    public void ExportThreadSamplesTruncatesDeepStacks()
+    {
+        EnableBytecodeInstrumentation();
+        using var collector = new MockProfilesCollector(Output);
+        SetExporter(collector);
+        SetEnvironmentVariable("OTEL_DOTNET_AUTO_PLUGINS", "TestApplication.ContinuousProfiler.ThreadPlugin, TestApplication.ContinuousProfiler, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null");
+        SetEnvironmentVariable("OTEL_DOTNET_AUTO_TRACES_ADDITIONAL_SOURCES", "TestApplication.ContinuousProfiler");
+        SetEnvironmentVariable("OTEL_TEST_DEEP_STACK", "true");
+
+        collector.ExpectCollected(ExpectCollected, "Expect Collected failed");
+        collector.Expect(
+            profileData => profileData.ResourceProfiles.Any(resourceProfiles =>
+                resourceProfiles.ScopeProfiles.Any(scopeProfile =>
+                    scopeProfile.Profiles.Any(profile => ContainsTruncatedDeepStack(profile, profileData.Dictionary)))),
+            "Expected an exported deep stack truncated to 512 frames");
+
+        var (_, _, processId) = RunTestApplication();
+
+        collector.ResourceExpector.ExpectStandardResources(processId, "TestApplication.ContinuousProfiler");
+
+        collector.AssertCollected();
+        collector.AssertExpectations();
+        collector.ResourceExpector.AssertExpectations();
+    }
+
+    [Fact]
+    [Trait("Category", "EndToEnd")]
+    public async Task ExportThreadSamplesAcrossControlPlaneConfigurationChanges()
+    {
+        EnableBytecodeInstrumentation();
+        using var collector = new MockProfilesCollector(Output);
+        SetExporter(collector);
+        SetEnvironmentVariable("OTEL_DOTNET_AUTO_PLUGINS", "TestApplication.ContinuousProfiler.RuntimeSamplerTransitionPlugin, TestApplication.ContinuousProfiler, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null");
+        SetEnvironmentVariable("OTEL_DOTNET_AUTO_TRACES_ADDITIONAL_SOURCES", "TestApplication.ContinuousProfiler");
+        SetEnvironmentVariable("OTEL_TEST_RUNTIME_SAMPLER_TRANSITIONS", "true");
+
+        // The test application applies ControlPlane snapshots through the native contract, simulating remote
+        // configuration independently of its transport. The Seed starts disabled, then the snapshots enable,
+        // disable, and re-enable sampling with a different period.
+        collector.Expect(profileData => ContainsFunctionWithPeriod(profileData, "RuntimeSamplerTransitions.CaptureBeforeDisable", 500_000_000));
+        collector.Expect(profileData => ContainsFunctionWithPeriod(profileData, "RuntimeSamplerTransitions.CaptureAfterReenable", 1_000_000_000));
+
+        // Disable is deliberately lazy: samples admitted before the Apply may still publish. The application
+        // checks the committed disabled state and throws if any transition or invalid-update check fails.
+        // Consume profiles while the application runs so allocation batches cannot fill the collector's bounded
+        // queue and block the exporter before it reads the re-enabled CPU samples.
+        await Task.WhenAll(
+            Task.Run(() => RunTestApplication()),
+            Task.Run(() => collector.AssertExpectations()));
+    }
+
     private static bool ExpectCollected(ICollection<ExportProfilesServiceRequest> c)
     {
         foreach (var request in c)
@@ -239,6 +292,40 @@ public class ContinuousProfilerTests : TestHelper
         }
 
         return false;
+    }
+
+    private static bool ContainsTruncatedDeepStack(Profile profile, ProfilesDictionary dictionary)
+    {
+        foreach (var sample in profile.Samples)
+        {
+            var stackIndex = sample.StackIndex;
+            if (stackIndex <= 0 || stackIndex >= dictionary.StackTable.Count)
+            {
+                continue;
+            }
+
+            var stack = dictionary.StackTable[stackIndex];
+            if (stack.LocationIndices.Count == 512 &&
+                GetFrameNames(stack, dictionary).Count(frame => frame.Contains("DeepStack.Capture", StringComparison.Ordinal)) > 1)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool ContainsFunctionWithPeriod(ExportProfilesServiceRequest profileData, string functionName, long period)
+    {
+        return profileData.ResourceProfiles.Any(resourceProfiles => resourceProfiles.ScopeProfiles.Any(scopeProfile =>
+            scopeProfile.Profiles.Any(profile => profile.Period == period && profile.Samples.Any(sample =>
+            {
+                var stackIndex = sample.StackIndex;
+                return stackIndex > 0 &&
+                    stackIndex < profileData.Dictionary.StackTable.Count &&
+                    GetFrameNames(profileData.Dictionary.StackTable[stackIndex], profileData.Dictionary)
+                        .Any(frameName => frameName.Contains(functionName, StringComparison.Ordinal));
+            }))));
     }
 
     private static IEnumerable<string> GetFrameNames(Stack stack, ProfilesDictionary dictionary)

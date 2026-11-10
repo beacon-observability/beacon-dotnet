@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "upstream": {
     "repository": "https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation.git",
-    "releaseTag": "v1.17.0",
-    "tagObject": "02b899fdcfc50acee8d4df45462fdea9e4789793",
-    "releaseCommit": "bb2d0ef0cfb64bbe0d9c88640848e4a92f263fd6"
+    "releaseTag": "v1.19.1",
+    "tagObject": "66a86995efd3a99c4a5dc0d71606d1a96068d950",
+    "releaseCommit": "190e514911ed5a7e37eb0dd2926b0dfa8e0fed28"
   }
 }
