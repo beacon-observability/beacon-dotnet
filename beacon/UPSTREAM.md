@@ -54,3 +54,15 @@ Fetching, merging, building, packaging, and releasing are distinct states.
 Review newly introduced workflows after every synchronization. Inherited
 upstream release workflows, bots, scheduled tasks, and third-party credential
 flows must not automatically become Beacon entry points.
+
+## Merging Synchronization Pull Requests
+
+Merge synchronization pull requests with a merge commit. Squash and rebase
+merges discard the original upstream commit ancestry even when the resulting
+files are identical. The release validator requires the exact upstream commit
+from `upstream.lock.json` to be an ancestor of the release commit.
+
+The downstream branch protection policy must permit merge commits while retaining
+required CI checks, conversation resolution, and force-push restrictions. A
+linear-history requirement conflicts with this full-history synchronization
+model. Do not bypass the ancestry check or rewrite published branch history.
