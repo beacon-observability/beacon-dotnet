@@ -1,5 +1,10 @@
 # Beacon .NET Changelog
 
+## 1.1.2
+
+- Adopt the pinned upstream v1.19.1 baseline and preserve its original history.
+- Retain patched dependencies, adapt Security API tests, and synchronize generated .NET Framework definitions.
+
 This file records Beacon .NET product changes only. See the root
 [`CHANGELOG.md`](../CHANGELOG.md) for inherited upstream changes.
 
