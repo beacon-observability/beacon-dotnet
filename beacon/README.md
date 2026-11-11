@@ -7,7 +7,7 @@ and produces Beacon .NET artifacts from it. The product entry point is
 
 ## Current Status
 
-- The downstream project is pinned to upstream `v1.17.0`, retains upstream
+- The downstream project is pinned to upstream `v1.19.1`, retains upstream
   history, and is maintained as a full-source repository rather than a GitHub
   fork.
 - Beacon publishes Linux glibc/musl x64 and ARM64, Windows, macOS, and NuGet
