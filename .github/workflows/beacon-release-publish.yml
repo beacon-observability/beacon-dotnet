@@ -78,8 +78,8 @@ jobs:
           New-Item -ItemType Directory -Path testapp | Out-Null
           Set-Location testapp
           Set-Content Directory.Build.props '<Project />'
-          dotnet new console --framework net10.0
-          dotnet publish --framework net10.0 --configuration Release
+          dotnet new console --framework net8.0
+          dotnet publish --framework net8.0 --configuration Release
 
           $modulePath = Join-Path $env:RUNNER_TEMP "OpenTelemetry.DotNet.Auto.psm1"
           $moduleUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:RELEASE_TAG/OpenTelemetry.DotNet.Auto.psm1"
@@ -94,7 +94,7 @@ jobs:
           $installDirectory = Join-Path $env:RUNNER_TEMP "beacon-dotnet-auto"
           Install-OpenTelemetryCore -InstallDir $installDirectory -RegisterAssembliesInGAC $false -ErrorAction Stop
           Register-OpenTelemetryForCurrentSession -OTelServiceName "beacon-release-validation"
-          ./bin/Release/net10.0/publish/testapp.exe
+          ./bin/Release/net8.0/publish/testapp.exe
           if (-not $?) { throw "Instrumented application failed with exit code $LASTEXITCODE." }
           if (-not (Test-Path (Join-Path $installDirectory "BEACON-METADATA.json"))) { throw "Beacon metadata is missing." }
           $uninstallPath = Join-Path $installDirectory "uninstall.ps1"
@@ -246,8 +246,8 @@ jobs:
           mkdir testapp
           cd testapp
           printf '%s\n' '<Project />' > Directory.Build.props
-          dotnet new console --framework net10.0
-          dotnet publish --framework net10.0 --configuration Release
+          dotnet new console --framework net8.0
+          dotnet publish --framework net8.0 --configuration Release
 
           installer="${RUNNER_TEMP}/otel-dotnet-auto-install.sh"
           curl -sSfL \
@@ -269,7 +269,7 @@ jobs:
             OTEL_TRACES_EXPORTER=none \
             OTEL_METRICS_EXPORTER=none \
             OTEL_LOGS_EXPORTER=none \
-            "${install_directory}/instrument.sh" ./bin/Release/net10.0/publish/testapp
+            "${install_directory}/instrument.sh" ./bin/Release/net8.0/publish/testapp
           sh "${install_directory}/uninstall.sh"
           test ! -e "${install_directory}"
 
@@ -336,8 +336,8 @@ jobs:
               mkdir /tmp/testapp
               cd /tmp/testapp
               printf "%s\n" "<Project />" > Directory.Build.props
-              dotnet new console --framework net10.0
-              dotnet publish --framework net10.0 --configuration Release
+              dotnet new console --framework net8.0
+              dotnet publish --framework net8.0 --configuration Release
               VERSION="$RELEASE_TAG" \
                 LOCAL_PATH="/release/$ARCHIVE" \
                 OTEL_DOTNET_AUTO_HOME=/tmp/beacon-dotnet-auto \
@@ -351,7 +351,7 @@ jobs:
                 OTEL_TRACES_EXPORTER=none \
                 OTEL_METRICS_EXPORTER=none \
                 OTEL_LOGS_EXPORTER=none \
-                /tmp/beacon-dotnet-auto/instrument.sh ./bin/Release/net10.0/publish/testapp
+                /tmp/beacon-dotnet-auto/instrument.sh ./bin/Release/net8.0/publish/testapp
               sh /tmp/beacon-dotnet-auto/uninstall.sh
               test ! -e /tmp/beacon-dotnet-auto
             '
