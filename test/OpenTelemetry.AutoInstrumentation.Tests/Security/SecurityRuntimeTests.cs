@@ -35,11 +35,11 @@ public class SecurityRuntimeTests
     {
         var received = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var runtime = new SecurityRuntime(record => received.TrySetResult(record), int.MaxValue, () => []);
-        Assert.Same(received.Task, await Task.WhenAny(received.Task, Task.Delay(TimeSpan.FromSeconds(10))));
+        await AssertCompletesWithinTimeout(received.Task).ConfigureAwait(true);
         var document = JObject.Parse(await received.Task.ConfigureAwait(true));
         Assert.True((long)document["uptime_ms"]! >= 0);
         runtime.Dispose();
-        Assert.Same(runtime.Completion, await Task.WhenAny(runtime.Completion, Task.Delay(TimeSpan.FromSeconds(10))));
+        await AssertCompletesWithinTimeout(runtime.Completion).ConfigureAwait(true);
         await runtime.Completion.ConfigureAwait(true);
     }
 
@@ -53,9 +53,9 @@ public class SecurityRuntimeTests
             attempted.TrySetResult(true);
             throw new InvalidOperationException("Simulated scan failure.");
         });
-        Assert.Same(attempted.Task, await Task.WhenAny(attempted.Task, Task.Delay(TimeSpan.FromSeconds(10))));
+        await AssertCompletesWithinTimeout(attempted.Task).ConfigureAwait(true);
         runtime.Dispose();
-        Assert.Same(runtime.Completion, await Task.WhenAny(runtime.Completion, Task.Delay(TimeSpan.FromSeconds(10))));
+        await AssertCompletesWithinTimeout(runtime.Completion).ConfigureAwait(true);
         await runtime.Completion.ConfigureAwait(true);
         Assert.Equal(0, emitted);
     }
@@ -74,9 +74,9 @@ public class SecurityRuntimeTests
 
             return [new RuntimeInventory.Dependency("Recovered", "1.0.0.0")];
         });
-        Assert.Same(received.Task, await Task.WhenAny(received.Task, Task.Delay(TimeSpan.FromSeconds(10))));
+        await AssertCompletesWithinTimeout(received.Task).ConfigureAwait(true);
         runtime.Dispose();
-        Assert.Same(runtime.Completion, await Task.WhenAny(runtime.Completion, Task.Delay(TimeSpan.FromSeconds(10))));
+        await AssertCompletesWithinTimeout(runtime.Completion).ConfigureAwait(true);
         await runtime.Completion.ConfigureAwait(true);
         var document = JObject.Parse(await received.Task.ConfigureAwait(true));
         Assert.Equal("Recovered", (string?)document["dependencies"]![0]!["name"]);
@@ -105,7 +105,7 @@ public class SecurityRuntimeTests
             release.Set();
         }
 
-        Assert.Same(runtime.Completion, await Task.WhenAny(runtime.Completion, Task.Delay(TimeSpan.FromSeconds(10))));
+        await AssertCompletesWithinTimeout(runtime.Completion).ConfigureAwait(true);
         await runtime.Completion.ConfigureAwait(true);
         Assert.Equal(0, emitted);
     }
@@ -119,9 +119,9 @@ public class SecurityRuntimeTests
             300,
             () => [],
             _ => throw new IOException("Simulated local enqueue failure."));
-        Assert.Same(received.Task, await Task.WhenAny(received.Task, Task.Delay(TimeSpan.FromSeconds(10))));
+        await AssertCompletesWithinTimeout(received.Task).ConfigureAwait(true);
         runtime.Dispose();
-        Assert.Same(runtime.Completion, await Task.WhenAny(runtime.Completion, Task.Delay(TimeSpan.FromSeconds(10))));
+        await AssertCompletesWithinTimeout(runtime.Completion).ConfigureAwait(true);
         await runtime.Completion.ConfigureAwait(true);
         Assert.Empty((JArray)JObject.Parse(await received.Task.ConfigureAwait(true))["dependencies"]!);
     }
@@ -138,6 +138,24 @@ public class SecurityRuntimeTests
         Assert.Contains(exporter.Attributes, pair => pair.Key == "source" && Equals(pair.Value, "beacon_security_sbom"));
         Assert.Contains(exporter.Attributes, pair => pair.Key == "event.name" && Equals(pair.Value, "beacon.security.sbom.inventory"));
         Assert.Equal("INFO", exporter.SeverityText);
+    }
+
+    private static async Task AssertCompletesWithinTimeout(Task task)
+    {
+#if NET
+        await task.WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
+#else
+        using var timeoutCancellation = new CancellationTokenSource();
+        try
+        {
+            Assert.Same(task, await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(10), timeoutCancellation.Token)).ConfigureAwait(true));
+            await task.ConfigureAwait(true);
+        }
+        finally
+        {
+            timeoutCancellation.Cancel();
+        }
+#endif
     }
 
     private sealed class CapturingExporter : BaseExporter<LogRecord>
