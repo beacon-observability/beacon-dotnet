@@ -4,7 +4,7 @@ set -euo pipefail
 
 # SDK patch versions can change this generator's provenance stamp without
 # changing its output. Keep every other generated-code difference actionable.
-regex_output='src/OpenTelemetry.AutoInstrumentation/Generated/net8.0/System.Text.RegularExpressions.Generator/System.Text.RegularExpressions.Generator.RegexGenerator/RegexGenerator.g.cs'
+regex_output='src/OpenTelemetry.AutoInstrumentation/Generated/net10.0/System.Text.RegularExpressions.Generator/System.Text.RegularExpressions.Generator.RegexGenerator/RegexGenerator.g.cs'
 normalize_stamp='s/^([[:space:]]*\[(global::System\.CodeDom\.Compiler\.)?GeneratedCodeAttribute\("System\.Text\.RegularExpressions\.Generator", ")[0-9]+(\.[0-9]+)+("\)\][[:space:]]*)$/\1SDK_VERSION\4/'
 
 git diff --exit-code HEAD -- . ":(exclude)${regex_output}"

@@ -92,7 +92,7 @@ checked during packaging and their semantics are tested by the managed suite.
    archives; and creates a draft Release.
 5. Manually inspect the draft file count, names, checksums, metadata, and release
    notes before publishing it.
-6. The post-release workflow downloads the public Release, runs .NET 8
+6. The post-release workflow downloads the public Release, runs .NET 10
    applications on Windows, macOS, and Linux glibc/musl for x64 and ARM64, and
    verifies artifact attestations. MSI and DEB/RPM packages must also complete a
    real install-run-uninstall lifecycle.

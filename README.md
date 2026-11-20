@@ -8,13 +8,21 @@ The project ships Linux glibc, Linux musl, Windows, macOS, and NuGet archives
 for x64 and applicable ARM64 platforms, together with Windows MSI and Linux
 DEB/RPM packages. Releases also include Shell and PowerShell installers,
 checksums, an SPDX SBOM, and build attestations. After publication, the release
-assets are downloaded again and used to run .NET 8 applications. End-to-end
+assets are downloaded again and used to run .NET 10 applications. End-to-end
 DataKit ingestion is not currently within the verified support scope.
 
 See the [Beacon development guide](beacon/README.md) for development, upstream
 synchronization, artifacts, and release preparation. Inherited OpenTelemetry
 usage and implementation documentation is available under
 [OpenTelemetry .NET Automatic Instrumentation](docs/README.md).
+
+## Runtime compatibility
+
+This source update adopts upstream v1.20.0 and its .NET 10 / .NET 11 test
+targets. Upstream removed the .NET 8 / .NET 9 targets; this candidate does not
+claim continued support for those runtimes. CI covers the supported modern
+runtimes and retains the existing Windows .NET Framework build path. A product
+release requires separate compatibility review and cross-platform CI approval.
 
 ## Native Packages
 

@@ -9,7 +9,7 @@ cd "${temporary}"
 git init --quiet
 git config user.name 'Generated output test'
 git config user.email 'generated-output@example.invalid'
-output='src/OpenTelemetry.AutoInstrumentation/Generated/net8.0/System.Text.RegularExpressions.Generator/System.Text.RegularExpressions.Generator.RegexGenerator/RegexGenerator.g.cs'
+output='src/OpenTelemetry.AutoInstrumentation/Generated/net10.0/System.Text.RegularExpressions.Generator/System.Text.RegularExpressions.Generator.RegexGenerator/RegexGenerator.g.cs'
 mkdir -p "$(dirname "${output}")"
 printf '%s\n' '[GeneratedCodeAttribute("System.Text.RegularExpressions.Generator", "8.0.14.42015")]' 'class Generated {}' > "${output}"
 printf '%s\n' 'original' > other.g.cs
