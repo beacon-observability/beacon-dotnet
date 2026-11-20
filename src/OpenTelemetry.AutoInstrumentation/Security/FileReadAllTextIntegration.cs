@@ -9,7 +9,7 @@ namespace OpenTelemetry.AutoInstrumentation.Security;
 /// <summary>
 /// Observes a modeled request-input flow to a file read invocation.
 /// </summary>
-[InstrumentMethod("System.Private.CoreLib", "System.IO.File", "ReadAllText", "System.String", ["System.String"], "6.0.0", "10.*.*", "Security", InstrumentationType.Security)]
+[InstrumentMethod("System.Private.CoreLib", "System.IO.File", "ReadAllText", "System.String", ["System.String"], "6.0.0", "11.*.*", "Security", InstrumentationType.Security)]
 public static class FileReadAllTextIntegration
 {
     internal static CallTargetState OnMethodBegin<TTarget>(TTarget instance, string path)
