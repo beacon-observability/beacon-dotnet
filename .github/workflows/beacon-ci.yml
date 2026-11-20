@@ -51,7 +51,7 @@ jobs:
         run: ./build.sh BuildTracer
       - name: Run core managed tests
         run: |
-          ./build.sh ManagedTests \ \
+          ./build.sh ManagedTests \
             --test-project OpenTelemetry.AutoInstrumentation.Tests \
             --test-target-framework net10.0 \
             --containers none
