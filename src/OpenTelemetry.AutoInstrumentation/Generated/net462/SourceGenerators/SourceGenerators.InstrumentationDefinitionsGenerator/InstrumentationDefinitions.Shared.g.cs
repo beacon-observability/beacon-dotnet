@@ -1126,7 +1126,7 @@ internal static partial class InstrumentationDefinitions
             }
             if (categories != 0)
             {
-                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Microsoft.AspNetCore.Hosting"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Microsoft.AspNetCore.Hosting.HostingApplication"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ProcessRequestAsync"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Threading.Tasks.Task", "Context"), 2, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.AspNetCoreRequestIntegration"), 0, categories));
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Microsoft.AspNetCore.Hosting"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Microsoft.AspNetCore.Hosting.HostingApplication"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ProcessRequestAsync"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Threading.Tasks.Task", "Context"), 2, 6, 0, 0, 11, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.AspNetCoreRequestIntegration"), 0, categories));
             }
         }
         {
@@ -1137,7 +1137,7 @@ internal static partial class InstrumentationDefinitions
             }
             if (categories != 0)
             {
-                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Private.CoreLib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.IO.File"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ReadAllText"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String"), 2, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.FileReadAllTextIntegration"), 0, categories));
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Private.CoreLib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.IO.File"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("ReadAllText"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String"), 2, 6, 0, 0, 11, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.FileReadAllTextIntegration"), 0, categories));
             }
         }
         {
@@ -1148,7 +1148,7 @@ internal static partial class InstrumentationDefinitions
             }
             if (categories != 0)
             {
-                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Net.Http"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Net.Http.HttpMessageInvoker"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("SendAsync"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Threading.Tasks.Task`1[System.Net.Http.HttpResponseMessage]", "System.Net.Http.HttpRequestMessage", "System.Threading.CancellationToken"), 3, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.HttpMessageInvokerSendIntegration"), 0, categories));
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Net.Http"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Net.Http.HttpMessageInvoker"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("SendAsync"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Threading.Tasks.Task`1[System.Net.Http.HttpResponseMessage]", "System.Net.Http.HttpRequestMessage", "System.Threading.CancellationToken"), 3, 6, 0, 0, 11, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.HttpMessageInvokerSendIntegration"), 0, categories));
             }
         }
         {
@@ -1159,7 +1159,7 @@ internal static partial class InstrumentationDefinitions
             }
             if (categories != 0)
             {
-                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Diagnostics.Process"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Diagnostics.Process"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Start"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Boolean"), 1, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.ProcessStartIntegration"), 0, categories));
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Diagnostics.Process"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Diagnostics.Process"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Start"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.Boolean"), 1, 6, 0, 0, 11, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.ProcessStartIntegration"), 0, categories));
             }
         }
         {
@@ -1170,7 +1170,7 @@ internal static partial class InstrumentationDefinitions
             }
             if (categories != 0)
             {
-                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Private.CoreLib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.String"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Concat"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String", "System.String"), 3, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.StringConcat2Integration"), 0, categories));
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Private.CoreLib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.String"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Concat"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String", "System.String"), 3, 6, 0, 0, 11, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.StringConcat2Integration"), 0, categories));
             }
         }
         {
@@ -1192,7 +1192,7 @@ internal static partial class InstrumentationDefinitions
             }
             if (categories != 0)
             {
-                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Private.CoreLib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.String"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Concat"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String", "System.String", "System.String"), 4, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.StringConcat3Integration"), 0, categories));
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Private.CoreLib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.String"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Concat"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String", "System.String", "System.String"), 4, 6, 0, 0, 11, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.StringConcat3Integration"), 0, categories));
             }
         }
         {
@@ -1214,7 +1214,7 @@ internal static partial class InstrumentationDefinitions
             }
             if (categories != 0)
             {
-                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Private.CoreLib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.String"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Concat"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String", "System.String", "System.String", "System.String"), 5, 6, 0, 0, 10, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.StringConcat4Integration"), 0, categories));
+                nativeCallTargetDefinitions.Add(new(NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.Private.CoreLib"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("System.String"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("Concat"), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16StringArray("System.String", "System.String", "System.String", "System.String", "System.String"), 5, 6, 0, 0, 11, 65535, 65535, NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String(AssemblyFullName), NativeCallTargetUnmanagedMemoryHelper.AllocateAndWriteUtf16String("OpenTelemetry.AutoInstrumentation.Security.StringConcat4Integration"), 0, categories));
             }
         }
         {
