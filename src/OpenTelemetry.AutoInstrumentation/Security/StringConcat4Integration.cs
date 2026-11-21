@@ -9,7 +9,7 @@ namespace OpenTelemetry.AutoInstrumentation.Security;
 /// <summary>
 /// Propagates request-local ranges through string concatenation.
 /// </summary>
-[InstrumentMethod("System.Private.CoreLib", "System.String", "Concat", "System.String", ["System.String", "System.String", "System.String", "System.String"], "6.0.0", "10.*.*", "Security", InstrumentationType.Security)]
+[InstrumentMethod("System.Private.CoreLib", "System.String", "Concat", "System.String", ["System.String", "System.String", "System.String", "System.String"], "6.0.0", "11.*.*", "Security", InstrumentationType.Security)]
 [InstrumentMethod("mscorlib", "System.String", "Concat", "System.String", ["System.String", "System.String", "System.String", "System.String"], "4.0.0", "4.*.*", "Security", InstrumentationType.Security)]
 public static class StringConcat4Integration
 {

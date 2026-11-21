@@ -35,8 +35,8 @@ First build a Release tracer distribution and the Release fixture:
 
 ```sh
 ./build.sh BuildTracer --configuration Release
-dotnet build test/test-applications/integrations/TestApplication.MinimalApi/TestApplication.MinimalApi.csproj -f net8.0 -c Release -p:Platform=x64
-python3 beacon/scripts/benchmark-security.py --dotnet /absolute/path/to/dotnet --framework net8.0 --requests 1000 --runs 5 --output /tmp/security-performance.json
+dotnet build test/test-applications/integrations/TestApplication.MinimalApi/TestApplication.MinimalApi.csproj -f net10.0 -c Release -p:Platform=x64
+python3 beacon/scripts/benchmark-security.py --dotnet /absolute/path/to/dotnet --framework net10.0 --requests 1000 --runs 5 --output /tmp/security-performance.json
 ```
 
 Use a new output path for each run. The driver rejects an existing report and

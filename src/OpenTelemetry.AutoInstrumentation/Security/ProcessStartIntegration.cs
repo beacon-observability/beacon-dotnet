@@ -10,7 +10,7 @@ namespace OpenTelemetry.AutoInstrumentation.Security;
 /// <summary>
 /// Observes modeled request-input flows at a process invocation attempt.
 /// </summary>
-[InstrumentMethod("System.Diagnostics.Process", "System.Diagnostics.Process", "Start", "System.Boolean", [], "6.0.0", "10.*.*", "Security", InstrumentationType.Security)]
+[InstrumentMethod("System.Diagnostics.Process", "System.Diagnostics.Process", "Start", "System.Boolean", [], "6.0.0", "11.*.*", "Security", InstrumentationType.Security)]
 public static class ProcessStartIntegration
 {
     internal static CallTargetState OnMethodBegin<TTarget>(TTarget instance)

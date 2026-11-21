@@ -7,7 +7,7 @@ and produces Beacon .NET artifacts from it. The product entry point is
 
 ## Current Status
 
-- The downstream project is pinned to upstream `v1.19.1`, retains upstream
+- The downstream project is pinned to upstream `v1.20.0`, retains upstream
   history, and is maintained as a full-source repository rather than a GitHub
   fork.
 - Beacon publishes Linux glibc/musl x64 and ARM64, Windows, macOS, and NuGet
@@ -18,7 +18,7 @@ and produces Beacon .NET artifacts from it. The product entry point is
   installer.
 - Build jobs use real console and ASP.NET Core applications to verify OTLP
   traces, metrics, and logs. Post-release jobs download the public GitHub
-  Release and run .NET 8 applications again.
+  Release and run .NET 10 applications again.
 - Releases include a unified SHA-256 manifest, an SPDX SBOM, and GitHub artifact
   attestations.
 - An opt-in [Security runtime assembly inventory](security/README.md) is in
@@ -28,13 +28,21 @@ and produces Beacon .NET artifacts from it. The product entry point is
 These statements describe the engineering readiness of Beacon itself. Upstream
 support is not automatically treated as verified Beacon support.
 
+## Runtime compatibility
+
+The v1.20.0 upstream update removes .NET 8 and .NET 9 test targets and adds
+.NET 11 alongside .NET 10. The candidate CI matrix follows those targets.
+Earlier Security and performance reports describe the previous baseline and
+are not validation evidence for this candidate. .NET Framework runtime
+acceptance remains subject to the existing Windows checks.
+
 ## Repository Layout
 
 | Location | Purpose |
 | --- | --- |
 | [`src`](../src/) | Managed automatic instrumentation, Startup Hook, Loader, and native CLR Profiler |
 | [`nuget`](../nuget/) | Upstream-compatible NuGet package layout, published as an aggregate archive |
-| [`build`](../build/) | Nuke build and test entry points |
+| [`build`](../build/) | Fallout build and test entry points |
 | [`packaging`](../packaging/) | MSI, DEB/RPM, and installation-management commands |
 | [`docs`](../docs/) | Inherited OpenTelemetry usage and implementation documentation |
 | [`beacon`](./) | Beacon versioning, provenance, packaging, synchronization, and release documentation |
@@ -76,7 +84,7 @@ a second set of profiler binaries.
 - [Beacon changelog](CHANGELOG.md)
 
 Regular CI checks Beacon metadata and packaging scripts, builds Linux x64, and
-uses the packaged archive to validate .NET 8 OTLP traces, metrics, logs, and
+uses the packaged archive to validate .NET 10 OTLP traces, metrics, logs, and
 ASP.NET Core client/server automatic instrumentation. Tag workflows perform the
 complete multi-platform build and first create a draft Release. Post-release
 workflows then verify installers, artifact attestations, metadata, and real
