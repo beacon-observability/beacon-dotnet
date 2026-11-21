@@ -65,28 +65,31 @@ runs:
         switch ($executionMode) {
           'pwsh' {
             $scriptPath = Join-Path $env:RUNNER_TEMP 'run-command-in-environment.ps1'
-            Set-Content -Path $scriptPath -Value $env:RUN_COMMAND -NoNewline
+            $scriptContent = '$ErrorActionPreference = "Stop"' + [Environment]::NewLine + '$PSNativeCommandUseErrorActionPreference = $true' + [Environment]::NewLine + $env:RUN_COMMAND + [Environment]::NewLine + 'if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }'
+            Set-Content -Path $scriptPath -Value $scriptContent -NoNewline
             & pwsh -NoLogo -NoProfile -NonInteractive -File $scriptPath
           }
           'powershell' {
             $scriptPath = Join-Path $env:RUNNER_TEMP 'run-command-in-environment.ps1'
-            Set-Content -Path $scriptPath -Value $env:RUN_COMMAND -NoNewline
+            $scriptContent = '$ErrorActionPreference = "Stop"' + [Environment]::NewLine + '$PSNativeCommandUseErrorActionPreference = $true' + [Environment]::NewLine + $env:RUN_COMMAND + [Environment]::NewLine + 'if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }'
+            Set-Content -Path $scriptPath -Value $scriptContent -NoNewline
             & powershell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $scriptPath
           }
           'bash' {
             $scriptPath = Join-Path $env:RUNNER_TEMP 'run-command-in-environment.sh'
             Set-Content -Path $scriptPath -Value $env:RUN_COMMAND -NoNewline
-            & bash $scriptPath
+            & bash -eo pipefail $scriptPath
           }
           'sh' {
             $scriptPath = Join-Path $env:RUNNER_TEMP 'run-command-in-environment.sh'
             Set-Content -Path $scriptPath -Value $env:RUN_COMMAND -NoNewline
-            & sh $scriptPath
+            & sh -e $scriptPath
           }
           default {
             throw "Unsupported execution-mode '$executionMode'."
           }
         }
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       env:
         EXECUTION_MODE: ${{ inputs.execution-mode }}
         RUN_COMMAND: ${{ inputs.run }}

@@ -20,7 +20,7 @@ import sys
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dotnet", default=shutil.which("dotnet"))
-    parser.add_argument("--framework", choices=("net8.0", "net10.0"), default="net8.0")
+    parser.add_argument("--framework", choices=("net10.0", "net11.0"), default="net10.0")
     parser.add_argument("--requests", type=int, default=500)
     parser.add_argument("--runs", type=int, default=3)
     parser.add_argument("--output", type=Path, required=True)

@@ -1,5 +1,9 @@
 # Beacon Security for .NET (in development)
 
+> The v1.20.0 source update targets .NET 10 and .NET 11. The .NET 8/9
+> measurements and acceptance reports below record the previous baseline;
+> they do not establish support or acceptance for this candidate. Current
+> platform acceptance must come from the updated CI matrix.
 <!-- cspell:words Pkcs -->
 
 The shared contract is pinned in [spec.lock.json](spec.lock.json). The target

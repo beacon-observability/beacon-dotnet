@@ -10,7 +10,7 @@ namespace OpenTelemetry.AutoInstrumentation.Security;
 /// Establishes a Security scope for the asynchronous ASP.NET Core request pipeline.
 /// </summary>
 // The native signature reader reports this nested TypeDef as "Context".
-[InstrumentMethod("Microsoft.AspNetCore.Hosting", "Microsoft.AspNetCore.Hosting.HostingApplication", "ProcessRequestAsync", "System.Threading.Tasks.Task", ["Context"], "6.0.0", "10.*.*", "Security", InstrumentationType.Security)]
+[InstrumentMethod("Microsoft.AspNetCore.Hosting", "Microsoft.AspNetCore.Hosting.HostingApplication", "ProcessRequestAsync", "System.Threading.Tasks.Task", ["Context"], "6.0.0", "11.*.*", "Security", InstrumentationType.Security)]
 public static class AspNetCoreRequestIntegration
 {
     internal static CallTargetState OnMethodBegin<TTarget, TContext>(TTarget instance, TContext context)

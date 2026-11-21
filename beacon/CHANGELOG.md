@@ -10,7 +10,9 @@ This file records Beacon .NET product changes only. See the root
 
 ## Unreleased
 
-- Adopted the verified OpenTelemetry source snapshot `4e1ae853b603343d58c3`; Beacon product version remains unchanged.
+- Adopted the verified OpenTelemetry source snapshot `26ca48017129cba3bf97`; Prepare Beacon 1.1.3 using the existing release workflow.
+
+- Adopted the verified OpenTelemetry source snapshot `4e1ae853b603343d58c3`; Prepare Beacon 1.1.3 using the existing release workflow.
 
 ## 1.1.1 - 2026-11-04
 

@@ -118,7 +118,19 @@ public class SecurityLocalOutputTests
 
     private static async Task AwaitCompletion(SecurityLocalOutput output)
     {
-        Assert.Same(output.Completion, await Task.WhenAny(output.Completion, Task.Delay(TimeSpan.FromSeconds(10))).ConfigureAwait(true));
+#if NET
+        await output.Completion.WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
+#else
+        using var timeoutCancellation = new CancellationTokenSource();
+        try
+        {
+            Assert.Same(output.Completion, await Task.WhenAny(output.Completion, Task.Delay(TimeSpan.FromSeconds(10), timeoutCancellation.Token)).ConfigureAwait(true));
+        }
+        finally
+        {
+            timeoutCancellation.Cancel();
+        }
+#endif
         await output.Completion.ConfigureAwait(true);
     }
 

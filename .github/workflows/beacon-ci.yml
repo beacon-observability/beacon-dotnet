@@ -54,7 +54,7 @@ jobs:
           ./build.cmd \
             --target ManagedTests \
             --test-project OpenTelemetry.AutoInstrumentation.Tests \
-            --test-target-framework net8.0 \
+            --test-target-framework net10.0 \
             --containers none
       - name: Package Beacon candidate
         run: |
@@ -80,44 +80,44 @@ jobs:
 
           dotnet build \
             test/test-applications/integrations/TestApplication.Smoke/TestApplication.Smoke.csproj \
-            --framework net8.0 \
+            --framework net10.0 \
             --configuration Release \
             -p:Platform=x64
           dotnet build \
             test/test-applications/integrations/TestApplication.Http/TestApplication.Http.csproj \
-            --framework net8.0 \
+            --framework net10.0 \
             --configuration Release \
             -p:Platform=x64
           dotnet build \
             test/test-applications/integrations/TestApplication.MinimalApi/TestApplication.MinimalApi.csproj \
-            --framework net8.0 \
+            --framework net10.0 \
             --configuration Release \
             -p:Platform=x64
           dotnet build \
             test/IntegrationTests/IntegrationTests.csproj \
-            --framework net8.0 \
+            --framework net10.0 \
             --configuration Release \
             -p:Platform=x64
 
           mkdir -p test-artifacts/release-validation
           dotnet vstest \
-            test/IntegrationTests/bin/x64/Release/net8.0/IntegrationTests.dll \
+            test/IntegrationTests/bin/x64/Release/net10.0/IntegrationTests.dll \
             --Tests:IntegrationTests.SmokeTests.OtlpTracesExporter,IntegrationTests.SmokeTests.SubmitMetrics,IntegrationTests.SmokeTests.LogsResource \
             '--Logger:trx;LogFileName=beacon-release-functional.trx' \
             --ResultsDirectory:test-artifacts/release-validation
           dotnet vstest \
-            test/IntegrationTests/bin/x64/Release/net8.0/IntegrationTests.dll \
+            test/IntegrationTests/bin/x64/Release/net10.0/IntegrationTests.dll \
             --Tests:IntegrationTests.HttpTests.SubmitTraces,IntegrationTests.HttpTests.SubmitMetrics \
             '--Logger:trx;LogFileName=beacon-release-aspnetcore.trx' \
             --ResultsDirectory:test-artifacts/release-validation
           dotnet vstest \
-            test/IntegrationTests/bin/x64/Release/net8.0/IntegrationTests.dll \
+            test/IntegrationTests/bin/x64/Release/net10.0/IntegrationTests.dll \
             '--TestCaseFilter:FullyQualifiedName~Security' \
             '--Logger:trx;LogFileName=beacon-release-security.trx' \
             --ResultsDirectory:test-artifacts/release-validation
-      - name: Validate Security on .NET 9 and .NET 10
+      - name: Validate Security on declared .NET runtimes
         run: |
-          for framework in net9.0 net10.0; do
+          for framework in net10.0 net11.0; do
             dotnet build \
               test/test-applications/integrations/TestApplication.Smoke/TestApplication.Smoke.csproj \
               --framework "${framework}" --configuration Release -p:Platform=x64
@@ -160,7 +160,7 @@ jobs:
       - name: Validate macOS Security
         run: |
           set -euo pipefail
-          for framework in net8.0 net9.0 net10.0; do
+          for framework in net10.0 net11.0; do
             dotnet build \
               test/test-applications/integrations/TestApplication.Smoke/TestApplication.Smoke.csproj \
               --framework "${framework}" --configuration Release -p:Platform=ARM64
@@ -190,13 +190,13 @@ jobs:
     uses: ./.github/workflows/_build.yml
     with:
       artifact-name: beacon-ci-windows
-      runner: windows-2022
+      runner: windows-2025
       environment-type: host
       log-directory: C:\ProgramData\OpenTelemetry .NET AutoInstrumentation\logs
 
   windows-msi:
     needs: windows-build
-    runs-on: windows-2022
+    runs-on: windows-2025
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -238,7 +238,7 @@ jobs:
             $previousHome = $env:BEACON_TEST_TRACER_HOME
             try {
               $env:BEACON_TEST_TRACER_HOME = $installedHome
-              foreach ($framework in @("net8.0", "net9.0", "net10.0")) {
+              foreach ($framework in @("net10.0", "net11.0")) {
                 Invoke-CheckedDotNet build `
                   test/test-applications/integrations/TestApplication.Smoke/TestApplication.Smoke.csproj `
                   --framework $framework --configuration Release -p:Platform=x64
