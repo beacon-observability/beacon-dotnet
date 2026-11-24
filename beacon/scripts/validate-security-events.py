@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 import sys
 
-from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
 
 def main():
@@ -20,6 +20,8 @@ def main():
     schema = json.loads(schema_path.read_text(encoding="utf-8"))
     Draft202012Validator.check_schema(schema)
     validator = Draft202012Validator(schema, format_checker=FormatChecker())
+    siem_schema = json.loads((schema_path.parent / "beacon-security-siem-v1.schema.json").read_text(encoding="utf-8"))
+    siem_validator = Draft202012Validator(siem_schema, format_checker=FormatChecker())
     count = 0
     failed = False
     for path in args.events:
@@ -34,6 +36,13 @@ def main():
                     print(f"{path}:{line_number}: invalid JSON", file=sys.stderr)
                     failed = True
                     continue
+                try:
+                    siem_validator.validate(record)
+                    record = json.loads(record["message"])
+                except (ValueError, KeyError, TypeError, ValidationError):
+                    print(f"{path}:{line_number}: invalid SIEM envelope", file=sys.stderr)
+                    failed = True
+                    continue
                 for error in validator.iter_errors(record):
                     # Report locations and rules without dumping potentially sensitive input.
                     location = "/".join(str(part) for part in error.absolute_schema_path)
@@ -44,7 +53,7 @@ def main():
         return 1
     if failed:
         return 1
-    print(f"Validated {count} Security events against schema v2.")
+    print(f"Validated {count} Security events against SIEM v1 and embedded schema v2.")
     return 0
 
 

@@ -23,6 +23,8 @@ internal static class SecurityFindingExport
         }
     });
 
+    public static bool ShouldExport(RequestFindings.EvidenceStatus status, bool includeNoEvidence) => includeNoEvidence || status != RequestFindings.EvidenceStatus.NoEvidence;
+
     public static void Complete(SecurityRequestContext scope, Exception? exception = null)
     {
         var observations = scope.Findings.Close();
@@ -57,9 +59,15 @@ internal static class SecurityFindingExport
 
             foreach (var observation in observations)
             {
-                var json = FindingEvent.Encode(observation, complete, request: request);
+                if (!ShouldExport(observation.Evidence.Status, SecurityRuntime.ReadBoolean(Environment.GetEnvironmentVariable, "BEACON_SECURITY_EXPORT_NO_EVIDENCE_ENABLED", false)))
+                {
+                    continue;
+                }
+
+                var json = FindingEvent.Encode(observation, complete, request: request, measure: SecuritySiem.WireBytes);
                 if (json is not null)
                 {
+                    json = SecuritySiem.Project(json);
                     localOutput?.PublishFinding(json);
                     try
                     {

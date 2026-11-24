@@ -76,3 +76,5 @@
 
 # Security contract digests require exact LF bytes on every checkout platform.
 /beacon/security/*.json text eol=lf
+
+/beacon/security/spec/** text eol=lf

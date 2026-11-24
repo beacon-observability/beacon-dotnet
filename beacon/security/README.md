@@ -170,8 +170,8 @@ than implying a successful 200 response. Exception messages are not collected.
 The completion callback clears its HTTP context provider when closing the scope.
 
 W3C trace context is captured at the sensitive invocation, independently of later
-span completion. The closest in-process server ancestor supplies `server_span_id`;
-`current_span_id` is omitted when equal to that server span. Native OTEL log
+span completion. `span_id` is the span active at detection, including when it is the server span.
+The old `server_span_id` and `current_span_id` fields are not emitted. Native OTEL log
 correlation retains the captured current span, including when export happens
 later. Legacy hierarchical IDs are omitted. Correlation does not establish that a
 backend retained the corresponding trace. The enabled-tracing collector case
@@ -444,3 +444,27 @@ macOS ARM64 CI is also prepared to build a native tracer and run the same Securi
 selection on .NET 8, .NET 9 and .NET 10. The process fixture permits macOS's fixed
 shell/echo paths as well as Linux and Windows equivalents. The workflow parses
 as YAML and its shell step passes syntax checking; macOS execution remains open.
+
+## SIEM output migration
+
+Current producers emit only the `beacon-security-siem-v1` envelope in OTel Logs
+and diagnostic JSONL. Parse `message` for the complete original serialized v2
+finding or inventory. Fifteen base fields plus required `instance_id` and available
+`trace_id`, `span_id`, and numeric `trace_flags` preserve process/invocation correlation.
+The native LogRecord carries the same invocation span. Fingerprint v1 is unchanged;
+there is no legacy-format switch. The immutable revision and both schema hashes
+are recorded in `spec.lock.json` and validated during packaging.
+
+Service and configured tenant come from the associated Logs provider Resource;
+absent tenant uses `default`. Verified actor and client-IP enrichment are unavailable
+and remain empty. Finding outcome remains `unknown`; informational severity means
+INFO log level, not assessed risk. Budgets and multipart packing include final escaped
+envelope bytes. Reduced evidence declares truncation before serialization; an
+unrepresentable record is dropped without another event family.
+
+`BEACON_SECURITY_EXPORT_NO_EVIDENCE_ENABLED` defaults to `false`. Filtering is
+applied before local queue admission and OTel emission; it does not consume delivery
+budgets or suppress detection, request deduplication, or upgrades to unknown/suspected.
+Inventory is unaffected. Consumers must accept all statuses when export is enabled.
+Update consumers before upgrading; rollback restores the prior runtime and its
+historical v2-body consumer together. Already stored events are unchanged.

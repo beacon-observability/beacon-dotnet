@@ -36,7 +36,7 @@ public class SecurityRuntimeTests
         var received = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var runtime = new SecurityRuntime(record => received.TrySetResult(record), int.MaxValue, () => []);
         await AssertCompletesWithinTimeout(received.Task).ConfigureAwait(true);
-        var document = JObject.Parse(await received.Task.ConfigureAwait(true));
+        var document = JObject.Parse((string)JObject.Parse(await received.Task.ConfigureAwait(true))["message"]!);
         Assert.True((long)document["uptime_ms"]! >= 0);
         runtime.Dispose();
         await AssertCompletesWithinTimeout(runtime.Completion).ConfigureAwait(true);
@@ -78,7 +78,7 @@ public class SecurityRuntimeTests
         runtime.Dispose();
         await AssertCompletesWithinTimeout(runtime.Completion).ConfigureAwait(true);
         await runtime.Completion.ConfigureAwait(true);
-        var document = JObject.Parse(await received.Task.ConfigureAwait(true));
+        var document = JObject.Parse((string)JObject.Parse(await received.Task.ConfigureAwait(true))["message"]!);
         Assert.Equal("Recovered", (string?)document["dependencies"]![0]!["name"]);
         Assert.True(attempts >= 2);
     }
@@ -123,7 +123,7 @@ public class SecurityRuntimeTests
         runtime.Dispose();
         await AssertCompletesWithinTimeout(runtime.Completion).ConfigureAwait(true);
         await runtime.Completion.ConfigureAwait(true);
-        Assert.Empty((JArray)JObject.Parse(await received.Task.ConfigureAwait(true))["dependencies"]!);
+        Assert.Empty((JArray)JObject.Parse((string)JObject.Parse(await received.Task.ConfigureAwait(true))["message"]!)["dependencies"]!);
     }
 
     [Fact]

@@ -32,6 +32,8 @@ printf '\n' >> "${test_root}/fingerprint-v1.json"
 expect_rejected "modified conformance vectors"
 
 for update in \
+  '.output_profile = "old"' \
+  '.siem_schema_sha256 = "invalid"' \
   '.target_schema_version = 3' \
   '.fingerprint_version = 2' \
   '.commit = "main"' \
@@ -60,7 +62,7 @@ mkdir -p "${security_test_checkout}"
 GIT_INDEX_FILE="${security_test_index}" git -C "${repository_root}" read-tree --empty
 GIT_INDEX_FILE="${security_test_index}" git -C "${repository_root}" add -- \
   .gitattributes beacon/security/spec.lock.json \
-  beacon/security/beacon-security-event-v2.schema.json beacon/security/fingerprint-v1.json
+  beacon/security/beacon-security-event-v2.schema.json beacon/security/beacon-security-siem-v1.schema.json beacon/security/fingerprint-v1.json
 security_test_control="$(printf 'control\n' | git -C "${repository_root}" hash-object -w --stdin)"
 GIT_INDEX_FILE="${security_test_index}" git -C "${repository_root}" update-index --add \
   --cacheinfo "100644,${security_test_control},beacon/security-checkout-control.txt"
