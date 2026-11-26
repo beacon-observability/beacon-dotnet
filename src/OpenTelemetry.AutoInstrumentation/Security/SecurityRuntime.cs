@@ -42,7 +42,7 @@ internal sealed class SecurityRuntime : IDisposable
 
                         previousObservedAt = observedAt;
                         var uptime = baselineUptime + stopwatch.ElapsedMilliseconds;
-                        var records = RuntimeInventory.Encode(collect(), instanceId, observedAt, startedAt, uptime, 65536);
+                        var records = RuntimeInventory.Encode(collect(), instanceId, observedAt, startedAt, uptime, 65536, SecuritySiem.WireBytes).Select(SecuritySiem.Project).ToArray();
                         lock (_gate)
                         {
                             if (_disposed)

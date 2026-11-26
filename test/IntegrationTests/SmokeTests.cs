@@ -68,7 +68,11 @@ public class SmokeTests : TestHelper
                         return false;
                     }
 
-                    rounds.Add(JObject.Parse(record.Body.StringValue));
+                    var envelope = JObject.Parse(record.Body.StringValue);
+                    Assert.Equal("software_inventory_info", (string?)envelope["event_class"]);
+                    var evidence = JObject.Parse((string)envelope["message"]!);
+                    Assert.Equal((string?)evidence["instance_id"], (string?)envelope["instance_id"]);
+                    rounds.Add(evidence);
                     return true;
                 },
                 "A complete runtime inventory round should reach OTLP.");

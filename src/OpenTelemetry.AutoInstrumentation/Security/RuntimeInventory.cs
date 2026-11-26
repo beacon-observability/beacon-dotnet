@@ -40,8 +40,9 @@ internal static class RuntimeInventory
         return dependencies.Values.ToArray();
     }
 
-    public static string[] Encode(Dependency[] dependencies, string instanceId, DateTime observedAt, DateTime startedAt, long uptimeMilliseconds, int maxBytes)
+    public static string[] Encode(Dependency[] dependencies, string instanceId, DateTime observedAt, DateTime startedAt, long uptimeMilliseconds, int maxBytes, Func<string, int>? measure = null)
     {
+        measure ??= Encoding.UTF8.GetByteCount;
         Inventory Create(Dependency[] entries, int? index = null, int? count = null) => new()
         {
             InstanceId = instanceId,
@@ -54,7 +55,7 @@ internal static class RuntimeInventory
         };
 
         var whole = Serialize(Create(dependencies));
-        if (Encoding.UTF8.GetByteCount(whole) <= maxBytes)
+        if (measure(whole) <= maxBytes)
         {
             return [whole];
         }
@@ -66,7 +67,7 @@ internal static class RuntimeInventory
         foreach (var dependency in dependencies)
         {
             current.Add(dependency);
-            if (Encoding.UTF8.GetByteCount(Serialize(Create(current.ToArray(), int.MaxValue, int.MaxValue))) <= maxBytes)
+            if (measure(Serialize(Create(current.ToArray(), int.MaxValue, int.MaxValue))) <= maxBytes)
             {
                 continue;
             }
@@ -80,7 +81,7 @@ internal static class RuntimeInventory
             parts.Add(current.ToArray());
             current.Clear();
             current.Add(dependency);
-            if (Encoding.UTF8.GetByteCount(Serialize(Create(current.ToArray(), int.MaxValue, int.MaxValue))) > maxBytes)
+            if (measure(Serialize(Create(current.ToArray(), int.MaxValue, int.MaxValue))) > maxBytes)
             {
                 throw new InvalidOperationException("Runtime inventory entry exceeds the record byte budget.");
             }

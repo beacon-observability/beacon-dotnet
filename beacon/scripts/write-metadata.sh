@@ -40,6 +40,7 @@ security_metadata="$(bash "${repository_root}/beacon/scripts/check-security-cont
 mkdir -p "${directory}/beacon-security"
 cp "${repository_root}/beacon/security/spec.lock.json" \
   "${repository_root}/beacon/security/beacon-security-event-v2.schema.json" \
+  "${repository_root}/beacon/security/beacon-security-siem-v1.schema.json" \
   "${repository_root}/beacon/security/fingerprint-v1.json" \
   "${directory}/beacon-security/"
 

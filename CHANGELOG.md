@@ -7,6 +7,12 @@ This component adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/compare/v1.20.0..HEAD)
 
+- **Breaking Security output:** adopt SIEM v1 envelopes with exact v2 evidence in
+  `message`, process identity and invocation `span_id`; filter `no_evidence` by
+  default with `BEACON_SECURITY_EXPORT_NO_EVIDENCE_ENABLED` opt-in. Include final
+  escaped envelope bytes in record and inventory budgets.
+
+
 ### Added
 
 - Beacon-only opt-in runtime assembly inventory over OTEL Logs, with serial

@@ -10,8 +10,9 @@ namespace OpenTelemetry.AutoInstrumentation.Security;
 
 internal static class FindingEvent
 {
-    public static string? Encode(RequestFindings.Observation observation, bool complete, int maxBytes = 65536, RequestDetails? request = null)
+    public static string? Encode(RequestFindings.Observation observation, bool complete, int maxBytes = 65536, RequestDetails? request = null, Func<string, int>? measure = null)
     {
+        measure ??= Encoding.UTF8.GetByteCount;
         var record = new Record
         {
             InstanceId = SecurityIdentity.InstanceId,
@@ -21,8 +22,8 @@ internal static class FindingEvent
             Rule = observation.Rule,
             CollectionComplete = complete,
             TraceId = observation.Trace?.TraceId.ToHexString(),
-            ServerSpanId = observation.Trace is { } trace && trace.ServerSpanId != default ? trace.ServerSpanId.ToHexString() : null,
-            CurrentSpanId = observation.Trace is { } current && current.CurrentSpanId != current.ServerSpanId ? current.CurrentSpanId.ToHexString() : null,
+            SpanId = observation.Trace?.CurrentSpanId.ToHexString(),
+            TraceFlags = observation.Trace is { } trace ? (int)trace.Flags : null,
             Request = CreateRequest(request),
             Sink = new SinkData
             {
@@ -54,7 +55,7 @@ internal static class FindingEvent
             Ranges = observation.Ranges.Select(range => new RangeData { SourceId = range.Source.Id, Start = range.Start, End = range.End }).ToArray(),
         };
         var json = Serialize(record);
-        if (Encoding.UTF8.GetByteCount(json) <= maxBytes)
+        if (measure(json) <= maxBytes)
         {
             return json;
         }
@@ -66,7 +67,7 @@ internal static class FindingEvent
         record.Truncated = true;
         record.TruncationReason = "record_byte_limit";
         json = Serialize(record);
-        return Encoding.UTF8.GetByteCount(json) <= maxBytes ? json : null;
+        return measure(json) <= maxBytes ? json : null;
     }
 
     private static RequestData? CreateRequest(RequestDetails? request)
@@ -106,11 +107,11 @@ internal static class FindingEvent
         [DataMember(Name = "trace_id", EmitDefaultValue = false)]
         public string? TraceId { get; set; }
 
-        [DataMember(Name = "server_span_id", EmitDefaultValue = false)]
-        public string? ServerSpanId { get; set; }
+        [DataMember(Name = "span_id", EmitDefaultValue = false)]
+        public string? SpanId { get; set; }
 
-        [DataMember(Name = "current_span_id", EmitDefaultValue = false)]
-        public string? CurrentSpanId { get; set; }
+        [DataMember(Name = "trace_flags", EmitDefaultValue = false)]
+        public int? TraceFlags { get; set; }
 
         [DataMember(Name = "schema_version")]
         public int SchemaVersion { get; set; } = 2;
