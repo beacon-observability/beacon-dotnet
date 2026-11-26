@@ -3,9 +3,8 @@
 
 using System.Reflection;
 using Newtonsoft.Json.Linq;
-using OpenTelemetry;
-using OpenTelemetry.Logs;
 using OpenTelemetry.AutoInstrumentation.Security;
+using OpenTelemetry.Logs;
 
 namespace OpenTelemetry.AutoInstrumentation.Tests.Security;
 
@@ -14,7 +13,7 @@ public class SecurityLogRecordTests
     [Fact]
     public void SharedExamplesPreserveBodyIdentityAndTimestamp()
     {
-        var root = Environment.GetEnvironmentVariable("BEACON_SECURITY_SPEC") ?? Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../beacon/security"));
+        var root = Environment.GetEnvironmentVariable("BEACON_SECURITY_SPEC") ?? Path.Combine(AppContext.BaseDirectory, "Security", "log-binding");
         foreach (var path in Directory.GetFiles(Path.Combine(root, "examples/log-records"), "*.json"))
         {
             var expected = JObject.Parse(File.ReadAllText(path));
@@ -39,7 +38,7 @@ public class SecurityLogRecordTests
     [Fact]
     public void SdkReceivesNativeEventMetadataAndUnwrappedBody()
     {
-        var processor = new CaptureProcessor();
+        using var processor = new CaptureProcessor();
         var builder = (LoggerProviderBuilder)typeof(Sdk).GetMethod("CreateLoggerProviderBuilder", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, null)!;
         using var provider = builder.AddProcessor(processor).Build();
         var emitter = new SecurityLogEmitter(provider);
@@ -59,16 +58,6 @@ public class SecurityLogRecordTests
         Assert.Null(body["occurrence_id"]);
     }
 
-    private sealed class CaptureProcessor : BaseProcessor<LogRecord>
-    {
-        public List<(string Body, DateTime Timestamp, string Id)> Records { get; } = [];
-
-        public override void OnEnd(LogRecord data)
-        {
-            Records.Add((data.Body!, data.Timestamp, (string)data.Attributes!.Single(attribute => attribute.Key == "event_id").Value!));
-        }
-    }
-
     [Theory]
     [InlineData("1970-01-01T00:00:00Z")]
     [InlineData("1969-12-31T23:59:59Z")]
@@ -79,5 +68,15 @@ public class SecurityLogRecordTests
     {
         var input = new JObject { ["event_name"] = "beacon.security.finding", ["observed_at"] = time, ["occurrence_id"] = "test" };
         Assert.ThrowsAny<Exception>(() => SecurityLogRecord.Bind(input.ToString()));
+    }
+
+    private sealed class CaptureProcessor : BaseProcessor<LogRecord>
+    {
+        public List<(string Body, DateTime Timestamp, string Id)> Records { get; } = [];
+
+        public override void OnEnd(LogRecord data)
+        {
+            Records.Add((data.Body!, data.Timestamp, (string)data.Attributes!.Single(attribute => attribute.Key == "event_id").Value!));
+        }
     }
 }
