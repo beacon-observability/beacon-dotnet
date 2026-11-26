@@ -35,3 +35,9 @@ round-trip checks and logical-event validator passed. An expanded isolated SDK 8
 harness passed 51 tests, including the actual inventory worker and SDK emitter.
 Host configuration/logging types remain fixture stubs; full .NET 10/11 and native
 profiler validation still requires SDK 11.
+
+The first full CI compile additionally identified member ordering and hashing/hex
+conversion analyzer errors in the new binding. Public methods now precede the
+internal policy helper. Inventory IDs use static SHA-256 on modern .NET and the
+existing explicit lowercase hexadecimal encoding pattern, with the Framework
+fallback retained. All 51 isolated tests still pass with identical vector IDs.

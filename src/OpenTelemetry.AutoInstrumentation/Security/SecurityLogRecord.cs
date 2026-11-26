@@ -74,8 +74,21 @@ internal sealed class SecurityLogRecord(string body, DateTime timestamp, string 
     {
         // JSON's required escapes only; do not escape literal Unicode or slashes.
         var json = "[" + string.Join(",", fields.Select(value => "\"" + Escape(value) + "\"")) + "]";
+#if NETFRAMEWORK
         using var hash = SHA256.Create();
-        return "inventory-" + BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(json))).Replace("-", string.Empty).ToLowerInvariant();
+        var bytes = hash.ComputeHash(Encoding.UTF8.GetBytes(json));
+#else
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(json));
+#endif
+        const string alphabet = "0123456789abcdef";
+        var hex = new char[bytes.Length * 2];
+        for (var index = 0; index < bytes.Length; index++)
+        {
+            hex[index * 2] = alphabet[bytes[index] >> 4];
+            hex[(index * 2) + 1] = alphabet[bytes[index] & 15];
+        }
+
+        return "inventory-" + new string(hex);
     }
 
     private static string Escape(string value)

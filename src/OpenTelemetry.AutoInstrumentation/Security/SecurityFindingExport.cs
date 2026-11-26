@@ -25,11 +25,6 @@ internal static class SecurityFindingExport
 
     public static bool ShouldExport(RequestFindings.EvidenceStatus status, bool includeNoEvidence) => includeNoEvidence || status != RequestFindings.EvidenceStatus.NoEvidence;
 
-    internal static bool ShouldExport(RequestFindings.EvidenceStatus status, string? setting)
-    {
-        return ShouldExport(status, bool.TryParse(setting, out var enabled) && enabled);
-    }
-
     public static void Complete(SecurityRequestContext scope, Exception? exception = null)
     {
         var observations = scope.Findings.Close();
@@ -88,5 +83,10 @@ internal static class SecurityFindingExport
         {
             // Export is best effort. Never affect the application's response or exception.
         }
+    }
+
+    internal static bool ShouldExport(RequestFindings.EvidenceStatus status, string? setting)
+    {
+        return ShouldExport(status, bool.TryParse(setting, out var enabled) && enabled);
     }
 }
