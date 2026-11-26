@@ -655,3 +655,11 @@ instead.
 | `OTEL_DOTNET_AUTO_OPAMP_SERVER_URL`                       | OpAMP server url.                                                                                | `https://localhost:4320/v1/opamp` | [Experimental](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/versioning-and-stability.md) |
 | `OTEL_DOTNET_AUTO_OPAMP_MAX_PENDING_CUSTOM_MESSAGES`      | Maximum number of custom messages that may wait to be sent.                                      | `2048`                            | [Experimental](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/versioning-and-stability.md) |
 | `OTEL_DOTNET_AUTO_OPAMP_MAX_PENDING_CUSTOM_MESSAGE_BYTES` | Maximum aggregate size, in bytes, of pending custom messages and state reports queued with them. | `67108864` (64 MiB)               | [Experimental](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/versioning-and-stability.md) |
+
+### Beacon Security evidence export
+
+`BEACON_SECURITY_EXPORT_NO_EVIDENCE_ENABLED` is a boolean, default `false`.
+It includes findings classified as `no_evidence` in OTel Logs and diagnostic JSONL.
+Unknown and suspected findings remain eligible; inventories are unaffected.
+Security remains disabled by default. See [Security output](../beacon/security/README.md#siem-output-migration)
+for the compact Body migration and native log metadata requirements.

@@ -24,3 +24,14 @@ test project, native profiler/integration tests and the target-runtime OTLP path
 have not been validated. The isolated harness is not target-platform acceptance.
 The .NET SDK uses 100-nanosecond DateTime precision; unsupported input precision
 fails explicitly instead of being silently rounded.
+
+## Main-branch conflict reconciliation
+
+Reconciled the SIEM source update from main without restoring SIEM envelopes on
+either producer path. Kept custom measurement hooks and downstream reference
+tests, updated lifecycle tests to read logical diagnostics, and packaged the
+new Body schema alongside its provenance. The contract mutation tests, package
+round-trip checks and logical-event validator passed. An expanded isolated SDK 8
+harness passed 51 tests, including the actual inventory worker and SDK emitter.
+Host configuration/logging types remain fixture stubs; full .NET 10/11 and native
+profiler validation still requires SDK 11.

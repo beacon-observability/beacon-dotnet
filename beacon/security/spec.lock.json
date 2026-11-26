@@ -6,5 +6,6 @@
   "event_schema_sha256": "e8051b48413c3a430dc2f0ea8cd4e24414bb58a6b082b2786602d98a82ab02e7",
   "fingerprint_vectors_sha256": "860b1b14e8019f699764b238f0d744b649d259d39f3f3638f02ae8db68cbabc2",
   "output_profile": "beacon-security-log-body-v1",
-  "log_body_schema_sha256": "5a46ed5600234f54a81d682b1a413ffacbcc0b1b4580f70a76d608f080b187ec"
+  "log_body_schema_sha256": "5a46ed5600234f54a81d682b1a413ffacbcc0b1b4580f70a76d608f080b187ec",
+  "siem_schema_sha256": "d7a27e59bd740cb4671ec4f24d3c5c3d2277020dec6a66bff42e58115bf9d34f"
 }

@@ -7,6 +7,12 @@ This component adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/compare/v1.20.0..HEAD)
 
+- **Breaking Security output:** emit compact v2 JSON directly in Body, move event
+  time to native log metadata and occurrence identity to `event_id`, and retain
+  invocation `span_id` plus default `no_evidence` filtering. Inventory and record
+  budgets measure final Body bytes.
+
+
 ### Added
 
 - Beacon-only opt-in runtime assembly inventory over OTEL Logs, with serial

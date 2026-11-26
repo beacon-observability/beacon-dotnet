@@ -171,8 +171,9 @@ than implying a successful 200 response. Exception messages are not collected.
 The completion callback clears its HTTP context provider when closing the scope.
 
 W3C trace context is captured at the sensitive invocation, independently of later
-span completion. The closest in-process server ancestor supplies `server_span_id`;
-`current_span_id` is omitted when equal to that server span. Native OTEL log
+span completion. `span_id` is the span active at detection, including when it is
+the server span. The old `server_span_id` and `current_span_id` fields are not
+emitted. Native OTEL log
 correlation retains the captured current span, including when export happens
 later. Legacy hierarchical IDs are omitted. Correlation does not establish that a
 backend retained the corresponding trace. The enabled-tracing collector case

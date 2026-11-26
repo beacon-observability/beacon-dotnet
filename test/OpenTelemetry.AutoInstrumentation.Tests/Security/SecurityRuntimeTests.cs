@@ -133,8 +133,9 @@ public class SecurityRuntimeTests
         using var exporter = new CapturingExporter();
         using var processor = new SimpleLogRecordExportProcessor(exporter);
         using var provider = builder.AddProcessor(processor).Build();
-        new SecurityLogEmitter(provider).EmitInventory("{}");
-        Assert.Equal("{}", exporter.Body);
+        const string logical = "{\"schema_version\":2,\"source\":\"beacon_security_sbom\",\"event_name\":\"beacon.security.sbom.inventory\",\"instance_id\":\"test\",\"observed_at\":\"2026-10-02T00:00:00Z\",\"started_at\":\"2026-10-02T00:00:00Z\",\"uptime_ms\":0,\"dependencies\":[]}";
+        new SecurityLogEmitter(provider).EmitInventory(logical);
+        Assert.Equal(SecurityLogRecord.Bind(logical).Body, exporter.Body);
         Assert.Contains(exporter.Attributes, pair => pair.Key == "source" && Equals(pair.Value, "beacon_security_sbom"));
         Assert.Contains(exporter.Attributes, pair => pair.Key == "event.name" && Equals(pair.Value, "beacon.security.sbom.inventory"));
         Assert.Equal("INFO", exporter.SeverityText);
