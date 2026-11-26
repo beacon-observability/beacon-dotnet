@@ -10,6 +10,9 @@ This file records Beacon .NET product changes only. See the root
 
 ## Unreleased
 
+- Preserve compact Security v2 JSON Body; move event time to native log metadata
+  and occurrence identity to `event_id`, retaining fingerprint v1 and source.
+
 - Adopted the verified OpenTelemetry source snapshot `26ca48017129cba3bf97`; Prepare Beacon 1.1.3 using the existing release workflow.
 
 - Adopted the verified OpenTelemetry source snapshot `4e1ae853b603343d58c3`; Prepare Beacon 1.1.3 using the existing release workflow.

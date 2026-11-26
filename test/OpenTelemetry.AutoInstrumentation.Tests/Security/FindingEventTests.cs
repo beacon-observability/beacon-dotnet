@@ -35,7 +35,7 @@ public class FindingEventTests
     {
         var observation = Observe("private-value", new string('界', 200));
         var full = FindingEvent.Encode(observation, true)!;
-        var json = FindingEvent.Encode(observation, true, Encoding.UTF8.GetByteCount(full) - 200)!;
+        var json = FindingEvent.Encode(observation, true, Encoding.UTF8.GetByteCount(SecurityLogRecord.Bind(full).Body) - 200)!;
         var document = JObject.Parse(json);
         Assert.Equal(observation.FindingId, (string?)document["finding_id"]);
         Assert.Equal(observation.OccurrenceId, (string?)document["occurrence_id"]);
@@ -44,7 +44,7 @@ public class FindingEventTests
         Assert.Equal("record_byte_limit", (string?)document["truncation_reason"]);
         Assert.Null(document["sources"]);
         Assert.Null(document["ranges"]);
-        Assert.True(Encoding.UTF8.GetByteCount(json) <= Encoding.UTF8.GetByteCount(full) - 200);
+        Assert.True(Encoding.UTF8.GetByteCount(SecurityLogRecord.Bind(json).Body) <= Encoding.UTF8.GetByteCount(SecurityLogRecord.Bind(full).Body) - 200);
         Assert.Null(FindingEvent.Encode(observation, true, 1));
     }
 

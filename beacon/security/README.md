@@ -48,6 +48,7 @@ not evidence of .NET source-to-sink detection or backend delivery.
 | Environment variable | Default | Behavior |
 | --- | --- | --- |
 | `BEACON_SECURITY_ENABLED` | `false` | Enable the Security lifecycle. |
+| `BEACON_SECURITY_EXPORT_NO_EVIDENCE_ENABLED` | `false` | Include `no_evidence` findings in online and local output. |
 | `BEACON_SECURITY_SBOM_ENABLED` | `true` | Collect loaded assemblies while Security is enabled. |
 | `BEACON_SECURITY_SBOM_REFRESH_SECONDS` | `300` | Positive integer delay after each completed collection; invalid values use 300. |
 | `BEACON_SECURITY_LOCAL_OUTPUT_ENABLED` | `false` | Enable process-local diagnostic snapshots and the optional evidence file. |
@@ -444,3 +445,21 @@ macOS ARM64 CI is also prepared to build a native tracer and run the same Securi
 selection on .NET 8, .NET 9 and .NET 10. The process fixture permits macOS's fixed
 shell/echo paths as well as Linux and Windows equivalents. The workflow parses
 as YAML and its shell step passes syntax checking; macOS execution remains open.
+
+## Current Security log binding
+
+Current source pins Security specification
+`d9d76e5a41d974d294bb596e06918bb954319bf6` and output profile
+`beacon-security-log-body-v1`. Each OTel LogRecord Body is compact single-line v2
+JSON. Only `observed_at` and `occurrence_id` move out of Body: event time uses the
+native timestamp, and occurrence identity uses log attribute `event_id`.
+`source` stays in Body and attributes. All remaining fields retain their original
+paths; there is no SIEM envelope or `message` wrapper. Inventory IDs are computed
+from the original logical event before compaction. Retransmissions retain time
+and identity. Body byte budgets and multipart planning use the final UTF-8 JSON.
+This source change does not establish acceptance for previously published releases.
+
+Local diagnostics retain complete logical v2 events. `span_id` means the active
+invocation span. Findings with `no_evidence` are filtered before encoding and local
+output by default; set `BEACON_SECURITY_EXPORT_NO_EVIDENCE_ENABLED=true` to include
+them. Empty or invalid values keep filtering enabled.

@@ -54,7 +54,7 @@ internal static class RuntimeInventory
         };
 
         var whole = Serialize(Create(dependencies));
-        if (Encoding.UTF8.GetByteCount(whole) <= maxBytes)
+        if (Encoding.UTF8.GetByteCount(SecurityLogRecord.Bind(whole).Body) <= maxBytes)
         {
             return [whole];
         }
@@ -66,7 +66,7 @@ internal static class RuntimeInventory
         foreach (var dependency in dependencies)
         {
             current.Add(dependency);
-            if (Encoding.UTF8.GetByteCount(Serialize(Create(current.ToArray(), int.MaxValue, int.MaxValue))) <= maxBytes)
+            if (Encoding.UTF8.GetByteCount(SecurityLogRecord.Bind(Serialize(Create(current.ToArray(), int.MaxValue, int.MaxValue))).Body) <= maxBytes)
             {
                 continue;
             }
@@ -80,7 +80,7 @@ internal static class RuntimeInventory
             parts.Add(current.ToArray());
             current.Clear();
             current.Add(dependency);
-            if (Encoding.UTF8.GetByteCount(Serialize(Create(current.ToArray(), int.MaxValue, int.MaxValue))) > maxBytes)
+            if (Encoding.UTF8.GetByteCount(SecurityLogRecord.Bind(Serialize(Create(current.ToArray(), int.MaxValue, int.MaxValue))).Body) > maxBytes)
             {
                 throw new InvalidOperationException("Runtime inventory entry exceeds the record byte budget.");
             }

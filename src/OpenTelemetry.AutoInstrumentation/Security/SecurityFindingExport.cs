@@ -23,6 +23,11 @@ internal static class SecurityFindingExport
         }
     });
 
+    internal static bool ShouldExport(RequestFindings.EvidenceStatus status, string? setting)
+    {
+        return status != RequestFindings.EvidenceStatus.NoEvidence || string.Equals(setting, "true", StringComparison.OrdinalIgnoreCase);
+    }
+
     public static void Complete(SecurityRequestContext scope, Exception? exception = null)
     {
         var observations = scope.Findings.Close();
@@ -57,6 +62,11 @@ internal static class SecurityFindingExport
 
             foreach (var observation in observations)
             {
+                if (!ShouldExport(observation.Evidence.Status, Environment.GetEnvironmentVariable("BEACON_SECURITY_EXPORT_NO_EVIDENCE_ENABLED")))
+                {
+                    continue;
+                }
+
                 var json = FindingEvent.Encode(observation, complete, request: request);
                 if (json is not null)
                 {

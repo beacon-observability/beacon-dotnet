@@ -284,6 +284,17 @@ public class MinimalApiTests : TestHelper
         return ValidateSingleAppLogExport(records) && ValidateSingleBeforeHostLogRecord(records);
     }
 
+    private static string ValidateSecurityMetadata(LogRecord record)
+    {
+        var body = JObject.Parse(record.Body.StringValue);
+        Assert.Null(body["observed_at"]);
+        Assert.Null(body["occurrence_id"]);
+        Assert.Null(body["message"]);
+        Assert.DoesNotContain('\n', record.Body.StringValue);
+        Assert.InRange(record.TimeUnixNano, 1UL, (ulong)long.MaxValue);
+        return Assert.Single(record.Attributes, attribute => attribute.Key == "event_id").Value.StringValue;
+    }
+
     private static bool ValidateProcessFindings(ICollection<LogRecord> records, bool expected, string mode, bool tracing)
     {
         var findings = records.Where(record => record.Attributes.Any(attribute => attribute.Key == "source" && attribute.Value.StringValue == "beacon_security")).ToArray();
@@ -291,6 +302,7 @@ public class MinimalApiTests : TestHelper
         foreach (var record in findings)
         {
             var document = JObject.Parse(record.Body.StringValue);
+            ValidateSecurityMetadata(record);
             Assert.Equal(mode == "shell" ? "command_injection" : "command_execution", (string?)document["rule"]);
             Assert.Equal(mode == "shell" ? "shell_script" : mode == "executable" ? "executable" : "argument", (string?)document["sink"]!["role"]);
             Assert.Equal("unknown", (string?)document["attack_evidence"]!["status"]);
@@ -309,7 +321,7 @@ public class MinimalApiTests : TestHelper
             var first = JObject.Parse(findings[0].Body.StringValue);
             var second = JObject.Parse(findings[1].Body.StringValue);
             Assert.Equal((string?)first["finding_id"], (string?)second["finding_id"]);
-            Assert.NotEqual((string?)first["occurrence_id"], (string?)second["occurrence_id"]);
+            Assert.NotEqual(ValidateSecurityMetadata(findings[0]), ValidateSecurityMetadata(findings[1]));
         }
 
         return true;
@@ -322,6 +334,7 @@ public class MinimalApiTests : TestHelper
         foreach (var record in findings)
         {
             var document = JObject.Parse(record.Body.StringValue);
+            ValidateSecurityMetadata(record);
             Assert.Equal(expectedRule, (string?)document["rule"]);
             Assert.Equal(expectedRule == "ssrf" ? "destination_address" : "path_or_query", (string?)document["sink"]!["role"]);
             if (expectedRule == "http_request_input")
@@ -345,7 +358,7 @@ public class MinimalApiTests : TestHelper
             var first = JObject.Parse(findings[0].Body.StringValue);
             var second = JObject.Parse(findings[1].Body.StringValue);
             Assert.Equal((string?)first["finding_id"], (string?)second["finding_id"]);
-            Assert.NotEqual((string?)first["occurrence_id"], (string?)second["occurrence_id"]);
+            Assert.NotEqual(ValidateSecurityMetadata(findings[0]), ValidateSecurityMetadata(findings[1]));
         }
 
         return true;
@@ -358,6 +371,7 @@ public class MinimalApiTests : TestHelper
         foreach (var record in findings)
         {
             var document = JObject.Parse(record.Body.StringValue);
+            ValidateSecurityMetadata(record);
             Assert.Equal("sql_injection", (string?)document["rule"]);
             Assert.Equal("sql_template", (string?)document["sink"]!["role"]);
             Assert.EndsWith(".ExecuteScalar", (string?)document["sink"]!["function"], StringComparison.Ordinal);
@@ -368,9 +382,10 @@ public class MinimalApiTests : TestHelper
             if (tracing)
             {
                 Assert.Equal(((string)document["trace_id"]!).ToUpperInvariant(), Convert.ToHexString(record.TraceId.Span));
-                Assert.NotNull(document["current_span_id"]);
-                Assert.Equal(((string)document["current_span_id"]!).ToUpperInvariant(), Convert.ToHexString(record.SpanId.Span));
-                Assert.NotEqual((string?)document["server_span_id"], (string?)document["current_span_id"]);
+                Assert.NotNull(document["span_id"]);
+                Assert.Equal(((string)document["span_id"]!).ToUpperInvariant(), Convert.ToHexString(record.SpanId.Span));
+                Assert.Null(document["server_span_id"]);
+                Assert.Null(document["current_span_id"]);
             }
         }
 
@@ -379,7 +394,7 @@ public class MinimalApiTests : TestHelper
             var first = JObject.Parse(findings[0].Body.StringValue);
             var second = JObject.Parse(findings[1].Body.StringValue);
             Assert.Equal((string?)first["finding_id"], (string?)second["finding_id"]);
-            Assert.NotEqual((string?)first["occurrence_id"], (string?)second["occurrence_id"]);
+            Assert.NotEqual(ValidateSecurityMetadata(findings[0]), ValidateSecurityMetadata(findings[1]));
         }
 
         return true;
@@ -400,12 +415,12 @@ public class MinimalApiTests : TestHelper
             for (var index = 0; index < findings.Length; index++)
             {
                 Assert.Equal(((string)documents[index]["trace_id"]!).ToUpperInvariant(), Convert.ToHexString(findings[index].TraceId.Span));
-                Assert.Equal(((string)documents[index]["server_span_id"]!).ToUpperInvariant(), Convert.ToHexString(findings[index].SpanId.Span));
+                Assert.Equal(((string)documents[index]["span_id"]!).ToUpperInvariant(), Convert.ToHexString(findings[index].SpanId.Span));
             }
         }
 
         Assert.Equal((string?)documents[0]["finding_id"], (string?)documents[1]["finding_id"]);
-        Assert.NotEqual((string?)documents[0]["occurrence_id"], (string?)documents[1]["occurrence_id"]);
+        Assert.NotEqual(ValidateSecurityMetadata(findings[0]), ValidateSecurityMetadata(findings[1]));
         foreach (var document in documents)
         {
             Assert.Equal(2, (int)document["schema_version"]!);
@@ -418,7 +433,8 @@ public class MinimalApiTests : TestHelper
             if (tracing)
             {
                 Assert.Equal(32, ((string)document["trace_id"]!).Length);
-                Assert.Equal(16, ((string)document["server_span_id"]!).Length);
+                Assert.Equal(16, ((string)document["span_id"]!).Length);
+                Assert.Null(document["server_span_id"]);
                 Assert.Null(document["current_span_id"]);
             }
 

@@ -41,7 +41,7 @@ public class RuntimeInventoryTests
         var documents = records.Select(JObject.Parse).ToArray();
         for (var index = 0; index < records.Length; index++)
         {
-            Assert.True(Encoding.UTF8.GetByteCount(records[index]) <= 640);
+            Assert.True(Encoding.UTF8.GetByteCount(SecurityLogRecord.Bind(records[index]).Body) <= 640);
             Assert.Equal(index, (int)documents[index]["part_index"]!);
             Assert.Equal(records.Length, (int)documents[index]["part_count"]!);
             Assert.Equal((string?)documents[0]["observed_at"], (string?)documents[index]["observed_at"]);

@@ -36,10 +36,11 @@ internal sealed class SecurityLogEmitter
 
     private void Emit(string body, string eventName, string source, FindingTrace? trace = null)
     {
+        var bound = SecurityLogRecord.Bind(body);
         var data = Activator.CreateInstance(_dataType)!;
-        _dataType.GetProperty("Body")!.SetValue(data, body);
+        _dataType.GetProperty("Body")!.SetValue(data, bound.Body);
         _dataType.GetProperty("EventName")!.SetValue(data, eventName);
-        _dataType.GetProperty("Timestamp")!.SetValue(data, DateTime.UtcNow);
+        _dataType.GetProperty("Timestamp")!.SetValue(data, bound.Timestamp);
         _dataType.GetProperty("ObservedTimestamp")!.SetValue(data, DateTime.UtcNow);
         _dataType.GetProperty("SeverityText")!.SetValue(data, "INFO");
         if (trace is not null)
@@ -55,6 +56,7 @@ internal sealed class SecurityLogEmitter
         var add = _attributesType.GetMethod("Add", [typeof(string), typeof(object)])!;
         add.Invoke(attributes, ["event.name", eventName]);
         add.Invoke(attributes, ["source", source]);
+        add.Invoke(attributes, ["event_id", bound.EventId]);
         _emit.Invoke(_logger, [data, attributes]);
     }
 }

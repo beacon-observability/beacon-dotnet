@@ -20,6 +20,7 @@ command -v jq >/dev/null 2>&1 || fail "jq is required to validate Security prove
 lock="${contract_directory}/spec.lock.json"
 schema="${contract_directory}/beacon-security-event-v2.schema.json"
 vectors="${contract_directory}/fingerprint-v1.json"
+body_schema="${contract_directory}/beacon-security-log-body-v1.schema.json"
 [[ -f "${lock}" && -f "${schema}" && -f "${vectors}" ]] || fail "Security contract files are missing"
 
 # Reject unsupported declarations rather than stamping a new version onto an old runtime.
@@ -28,7 +29,9 @@ jq -se '
   type == "object" and
   .repository == "https://github.com/beacon-observability/beacon-security-spec" and
   (.commit | type == "string" and test("^[0-9a-f]{40}$")) and
+  .output_profile == "beacon-security-log-body-v1" and
   .target_schema_version == 2 and .fingerprint_version == 1 and
+  (.log_body_schema_sha256 | type == "string" and test("^[0-9a-f]{64}$")) and
   (.event_schema_sha256 | type == "string" and test("^[0-9a-f]{64}$")) and
   (.fingerprint_vectors_sha256 | type == "string" and test("^[0-9a-f]{64}$")))
 ' "${lock}" >/dev/null || fail "invalid or unsupported Security contract lock"
@@ -46,6 +49,7 @@ hash_file() {
 [[ "$(hash_file "${schema}")" == "$(jq -r '.event_schema_sha256' "${lock}")" ]] || fail "Security event schema digest does not match the lock"
 [[ "$(hash_file "${vectors}")" == "$(jq -r '.fingerprint_vectors_sha256' "${lock}")" ]] || fail "Security fingerprint vectors digest does not match the lock"
 jq -e '."$defs".inventory.properties.schema_version.const == 2 and ."$defs".finding.properties.schema_version.const == 2 and ."$defs".finding.properties.fingerprint_version.const == 1' "${schema}" >/dev/null || fail "Security schema version declarations do not match the runtime"
+[[ "$(hash_file "${body_schema}")" == "$(jq -r '.log_body_schema_sha256' "${lock}")" ]] || fail "Security log Body schema digest does not match the lock"
 # The normative vectors deliberately contain unpaired UTF-16 surrogates, which
 # jq rejects. Preserve their bytes here; managed conformance tests interpret them.
 
@@ -55,10 +59,12 @@ jq -c '{
   enabledByDefault: false,
   schemaVersion: .target_schema_version,
   fingerprintVersion: .fingerprint_version,
+  outputProfile: .output_profile,
   spec: {
     repository: .repository,
     commit: .commit,
     schemaSha256: .event_schema_sha256,
+    logBodySchemaSha256: .log_body_schema_sha256,
     fingerprintVectorsSha256: .fingerprint_vectors_sha256
   }
 }' "${lock}"
