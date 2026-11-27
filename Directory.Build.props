@@ -1,18 +1,11 @@
 <Project>
   <Import Project="$(MSBuildThisFileDirectory)Common.props" />
+  <Import Project="$(MSBuildThisFileDirectory)beacon/Version.props" />
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <LangVersion>15.0</LangVersion>
 
-    <!--
-      Beacon product releases use standard vX.Y.Z tags. Keep those tags from
-      changing the upstream-derived assembly and NuGet version calculated by
-      MinVer. Update the base when beacon/upstream.lock.json is advanced.
-    -->
-    <BeaconUpstreamDevelopmentVersion>1.20.0</BeaconUpstreamDevelopmentVersion>
-    <BeaconProductVersion>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)beacon/version.properties').Trim().Replace('beacon.version=', ''))</BeaconProductVersion>
-    <MinVerVersionOverride>$(BeaconUpstreamDevelopmentVersion)-beacon.$(BeaconProductVersion)</MinVerVersionOverride>
   </PropertyGroup>
 </Project>

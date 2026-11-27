@@ -10,6 +10,13 @@ This file records Beacon .NET product changes only. See the root
 
 ## Unreleased
 
+## 2.0.1 - 2026-11-27
+
+- Share pinned upstream version inputs between the isolated native build driver
+  and managed projects, fixing the assembly mismatch exposed by the v2.0.0 tag.
+- Carry the compact Security log binding into the corrected release; v2.0.0
+  retains its immutable tag but has no published Release assets.
+
 ## 2.0.0 - 2026-11-27
 
 - Preserve compact Security v2 JSON Body; move event time to native log metadata

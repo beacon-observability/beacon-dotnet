@@ -7,6 +7,9 @@ This component adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/compare/v1.20.0..HEAD)
 
+- Fix native loader assembly references when Beacon product tags cross a major
+  version, keeping the native build driver aligned with managed version inputs.
+
 - **Breaking Security output:** emit compact v2 JSON directly in Body, move event
   time to native log metadata and occurrence identity to `event_id`, and retain
   invocation `span_id` plus default `no_evidence` filtering. Inventory and record

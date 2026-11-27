@@ -82,6 +82,11 @@ checked during packaging and their semantics are tested by the managed suite.
 
 ## Release and Acceptance Process
 
+The isolated build driver and managed projects both import `beacon/Version.props`.
+Update its upstream base only when adopting a new upstream baseline. Run
+`bash beacon/scripts/check-build-version.sh` to verify that native and managed
+version inputs match; Beacon product tags must not change assembly identity.
+
 1. Pin the final source commit, upstream baseline, dependencies, and build
    environment. Confirm licenses and third-party notices.
 2. Require the main-branch CI and the complete multi-platform release checks to

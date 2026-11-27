@@ -326,5 +326,5 @@ jobs:
             --verify-tag \
             --draft \
             --target "${GITHUB_SHA}" \
-            --title "Beacon .NET ${version}" \
+            --title "v${version}" \
             --notes-file "${notes}"
