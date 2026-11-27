@@ -28,7 +28,9 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-dotnet
       - name: Check Beacon metadata
-        run: bash beacon/scripts/check-version.sh
+        run: |
+          bash beacon/scripts/check-version.sh
+          bash beacon/scripts/check-build-version.sh
       - name: Test Beacon packaging
         run: |
           bash beacon/scripts/check-security-contract.test.sh
