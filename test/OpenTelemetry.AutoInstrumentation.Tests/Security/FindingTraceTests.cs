@@ -37,8 +37,8 @@ public class FindingTraceTests
         var document = JObject.Parse(FindingEvent.Encode(observation, true, request: new RequestDetails("GET", "/files/{id}", 404, null))!);
         Assert.Equal(server.TraceId.ToHexString(), (string?)document["trace_id"]);
         Assert.Null(document["server_span_id"]);
+        Assert.Null(document["current_span_id"]);
         Assert.Equal(snapshot.CurrentSpanId.ToHexString(), (string?)document["span_id"]);
-        Assert.Equal((int)snapshot.Flags, (int)document["trace_flags"]!);
         Assert.Equal("/files/{id}", (string?)document["request"]!["route"]);
         Assert.Equal(404, (int)document["request"]!["status_code"]!);
         Assert.Null(document["request"]!["error_type"]);

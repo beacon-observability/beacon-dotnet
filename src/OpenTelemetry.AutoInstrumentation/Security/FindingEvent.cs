@@ -12,7 +12,7 @@ internal static class FindingEvent
 {
     public static string? Encode(RequestFindings.Observation observation, bool complete, int maxBytes = 65536, RequestDetails? request = null, Func<string, int>? measure = null)
     {
-        measure ??= Encoding.UTF8.GetByteCount;
+        measure ??= raw => Encoding.UTF8.GetByteCount(SecurityLogRecord.Bind(raw).Body);
         var record = new Record
         {
             InstanceId = SecurityIdentity.InstanceId,

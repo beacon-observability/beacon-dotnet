@@ -42,7 +42,7 @@ internal static class RuntimeInventory
 
     public static string[] Encode(Dependency[] dependencies, string instanceId, DateTime observedAt, DateTime startedAt, long uptimeMilliseconds, int maxBytes, Func<string, int>? measure = null)
     {
-        measure ??= Encoding.UTF8.GetByteCount;
+        measure ??= raw => Encoding.UTF8.GetByteCount(SecurityLogRecord.Bind(raw).Body);
         Inventory Create(Dependency[] entries, int? index = null, int? count = null) => new()
         {
             InstanceId = instanceId,

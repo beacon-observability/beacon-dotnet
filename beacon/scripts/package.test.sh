@@ -30,7 +30,7 @@ unzip -p "${archive}" BEACON-METADATA.json | jq -e \
   '.security.schemaVersion == $lock[0].target_schema_version and
    .security.fingerprintVersion == $lock[0].fingerprint_version and
    .security.outputProfile == $lock[0].output_profile and
-   .security.spec.siemSchemaSha256 == $lock[0].siem_schema_sha256 and
+   .security.spec.logBodySchemaSha256 == $lock[0].log_body_schema_sha256 and
    .security.enabledByDefault == false and .security.status == "experimental" and
    .security.spec.commit == $lock[0].commit and
    .security.spec.schemaSha256 == $lock[0].event_schema_sha256 and

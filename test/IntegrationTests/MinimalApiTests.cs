@@ -66,7 +66,7 @@ public class MinimalApiTests : TestHelper
 
             var findings = File.ReadAllLines(evidence);
             Assert.Equal(2, findings.Length);
-            var documents = findings.Select(SecurityEvidence).ToArray();
+            var documents = findings.Select(JObject.Parse).ToArray();
             var instanceId = (string)documents[0]["instance_id"]!;
             Assert.Equal(instanceId, (string?)documents[1]["instance_id"]);
             Assert.NotEqual((string?)documents[0]["occurrence_id"], (string?)documents[1]["occurrence_id"]);
@@ -77,12 +77,12 @@ public class MinimalApiTests : TestHelper
             {
                 Assert.DoesNotContain("first-request", finding, StringComparison.Ordinal);
                 Assert.DoesNotContain("second-request", finding, StringComparison.Ordinal);
-                Assert.Equal("path_traversal", (string?)SecurityEvidence(finding)["rule"]);
+                Assert.Equal("path_traversal", (string?)JObject.Parse(finding)["rule"]);
             }
 
             var inventories = File.ReadAllLines(Path.Combine(snapshotDirectory, "inventory.jsonl"));
             Assert.NotEmpty(inventories);
-            Assert.All(inventories, inventory => Assert.Equal(instanceId, (string?)SecurityEvidence(inventory)["instance_id"]));
+            Assert.All(inventories, inventory => Assert.Equal(instanceId, (string?)JObject.Parse(inventory)["instance_id"]));
             Assert.Empty(Directory.GetFiles(snapshotDirectory, "*.tmp"));
         }
         finally
@@ -284,15 +284,15 @@ public class MinimalApiTests : TestHelper
         return ValidateSingleAppLogExport(records) && ValidateSingleBeforeHostLogRecord(records);
     }
 
-    private static JObject SecurityEvidence(string wire)
+    private static string ValidateSecurityMetadata(LogRecord record)
     {
-        var envelope = JObject.Parse(wire);
-        Assert.NotNull(envelope["instance_id"]);
-        Assert.Equal("informational", (string?)envelope["severity"]);
-        var evidence = JObject.Parse((string)envelope["message"]!);
-        Assert.Equal((string?)evidence["instance_id"], (string?)envelope["instance_id"]);
-        Assert.Equal((string?)evidence["span_id"], (string?)envelope["span_id"]);
-        return evidence;
+        var body = JObject.Parse(record.Body.StringValue);
+        Assert.Null(body["observed_at"]);
+        Assert.Null(body["occurrence_id"]);
+        Assert.Null(body["message"]);
+        Assert.DoesNotContain('\n', record.Body.StringValue);
+        Assert.InRange(record.TimeUnixNano, 1UL, (ulong)long.MaxValue);
+        return Assert.Single(record.Attributes, attribute => attribute.Key == "event_id").Value.StringValue;
     }
 
     private static bool ValidateProcessFindings(ICollection<LogRecord> records, bool expected, string mode, bool tracing)
@@ -301,7 +301,8 @@ public class MinimalApiTests : TestHelper
         Assert.Equal(expected ? 2 : 0, findings.Length);
         foreach (var record in findings)
         {
-            var document = SecurityEvidence(record.Body.StringValue);
+            var document = JObject.Parse(record.Body.StringValue);
+            ValidateSecurityMetadata(record);
             Assert.Equal(mode == "shell" ? "command_injection" : "command_execution", (string?)document["rule"]);
             Assert.Equal(mode == "shell" ? "shell_script" : mode == "executable" ? "executable" : "argument", (string?)document["sink"]!["role"]);
             Assert.Equal("unknown", (string?)document["attack_evidence"]!["status"]);
@@ -317,10 +318,10 @@ public class MinimalApiTests : TestHelper
 
         if (expected)
         {
-            var first = SecurityEvidence(findings[0].Body.StringValue);
-            var second = SecurityEvidence(findings[1].Body.StringValue);
+            var first = JObject.Parse(findings[0].Body.StringValue);
+            var second = JObject.Parse(findings[1].Body.StringValue);
             Assert.Equal((string?)first["finding_id"], (string?)second["finding_id"]);
-            Assert.NotEqual((string?)first["occurrence_id"], (string?)second["occurrence_id"]);
+            Assert.NotEqual(ValidateSecurityMetadata(findings[0]), ValidateSecurityMetadata(findings[1]));
         }
 
         return true;
@@ -332,7 +333,8 @@ public class MinimalApiTests : TestHelper
         Assert.Equal(expectedRule is not null ? 2 : 0, findings.Length);
         foreach (var record in findings)
         {
-            var document = SecurityEvidence(record.Body.StringValue);
+            var document = JObject.Parse(record.Body.StringValue);
+            ValidateSecurityMetadata(record);
             Assert.Equal(expectedRule, (string?)document["rule"]);
             Assert.Equal(expectedRule == "ssrf" ? "destination_address" : "path_or_query", (string?)document["sink"]!["role"]);
             if (expectedRule == "http_request_input")
@@ -353,10 +355,10 @@ public class MinimalApiTests : TestHelper
 
         if (expectedRule is not null)
         {
-            var first = SecurityEvidence(findings[0].Body.StringValue);
-            var second = SecurityEvidence(findings[1].Body.StringValue);
+            var first = JObject.Parse(findings[0].Body.StringValue);
+            var second = JObject.Parse(findings[1].Body.StringValue);
             Assert.Equal((string?)first["finding_id"], (string?)second["finding_id"]);
-            Assert.NotEqual((string?)first["occurrence_id"], (string?)second["occurrence_id"]);
+            Assert.NotEqual(ValidateSecurityMetadata(findings[0]), ValidateSecurityMetadata(findings[1]));
         }
 
         return true;
@@ -368,7 +370,8 @@ public class MinimalApiTests : TestHelper
         Assert.Equal(expected ? 2 : 0, findings.Length);
         foreach (var record in findings)
         {
-            var document = SecurityEvidence(record.Body.StringValue);
+            var document = JObject.Parse(record.Body.StringValue);
+            ValidateSecurityMetadata(record);
             Assert.Equal("sql_injection", (string?)document["rule"]);
             Assert.Equal("sql_template", (string?)document["sink"]!["role"]);
             Assert.EndsWith(".ExecuteScalar", (string?)document["sink"]!["function"], StringComparison.Ordinal);
@@ -381,16 +384,17 @@ public class MinimalApiTests : TestHelper
                 Assert.Equal(((string)document["trace_id"]!).ToUpperInvariant(), Convert.ToHexString(record.TraceId.Span));
                 Assert.NotNull(document["span_id"]);
                 Assert.Equal(((string)document["span_id"]!).ToUpperInvariant(), Convert.ToHexString(record.SpanId.Span));
+                Assert.Null(document["server_span_id"]);
                 Assert.Null(document["current_span_id"]);
             }
         }
 
         if (expected)
         {
-            var first = SecurityEvidence(findings[0].Body.StringValue);
-            var second = SecurityEvidence(findings[1].Body.StringValue);
+            var first = JObject.Parse(findings[0].Body.StringValue);
+            var second = JObject.Parse(findings[1].Body.StringValue);
             Assert.Equal((string?)first["finding_id"], (string?)second["finding_id"]);
-            Assert.NotEqual((string?)first["occurrence_id"], (string?)second["occurrence_id"]);
+            Assert.NotEqual(ValidateSecurityMetadata(findings[0]), ValidateSecurityMetadata(findings[1]));
         }
 
         return true;
@@ -405,7 +409,7 @@ public class MinimalApiTests : TestHelper
             return true;
         }
 
-        var documents = findings.Select(record => SecurityEvidence(record.Body.StringValue)).ToArray();
+        var documents = findings.Select(record => JObject.Parse(record.Body.StringValue)).ToArray();
         if (tracing)
         {
             for (var index = 0; index < findings.Length; index++)
@@ -416,7 +420,7 @@ public class MinimalApiTests : TestHelper
         }
 
         Assert.Equal((string?)documents[0]["finding_id"], (string?)documents[1]["finding_id"]);
-        Assert.NotEqual((string?)documents[0]["occurrence_id"], (string?)documents[1]["occurrence_id"]);
+        Assert.NotEqual(ValidateSecurityMetadata(findings[0]), ValidateSecurityMetadata(findings[1]));
         foreach (var document in documents)
         {
             Assert.Equal(2, (int)document["schema_version"]!);
@@ -430,6 +434,7 @@ public class MinimalApiTests : TestHelper
             {
                 Assert.Equal(32, ((string)document["trace_id"]!).Length);
                 Assert.Equal(16, ((string)document["span_id"]!).Length);
+                Assert.Null(document["server_span_id"]);
                 Assert.Null(document["current_span_id"]);
             }
 

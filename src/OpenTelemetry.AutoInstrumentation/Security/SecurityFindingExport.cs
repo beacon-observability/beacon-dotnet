@@ -64,10 +64,9 @@ internal static class SecurityFindingExport
                     continue;
                 }
 
-                var json = FindingEvent.Encode(observation, complete, request: request, measure: SecuritySiem.WireBytes);
+                var json = FindingEvent.Encode(observation, complete, request: request);
                 if (json is not null)
                 {
-                    json = SecuritySiem.Project(json);
                     localOutput?.PublishFinding(json);
                     try
                     {
@@ -84,5 +83,10 @@ internal static class SecurityFindingExport
         {
             // Export is best effort. Never affect the application's response or exception.
         }
+    }
+
+    internal static bool ShouldExport(RequestFindings.EvidenceStatus status, string? setting)
+    {
+        return ShouldExport(status, bool.TryParse(setting, out var enabled) && enabled);
     }
 }

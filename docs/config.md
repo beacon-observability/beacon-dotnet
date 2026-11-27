@@ -2,6 +2,10 @@
 
 ## Beacon Security (in development)
 
+`BEACON_SECURITY_EXPORT_NO_EVIDENCE_ENABLED` defaults to `false`. Set it to
+`true` to include findings classified as `no_evidence` in OTLP and local output.
+Findings classified as `unknown` or `suspected` remain eligible by default.
+
 Beacon-specific Security settings and current implementation limits are described
 in [the Security development guide](../beacon/security/README.md). The opt-in
 `BEACON_SECURITY_ENABLED` switch currently enables runtime assembly inventory and
@@ -658,4 +662,4 @@ instead.
 It includes findings classified as `no_evidence` in OTel Logs and diagnostic JSONL.
 Unknown and suspected findings remain eligible; inventories are unaffected.
 Security remains disabled by default. See [Security output](../beacon/security/README.md#siem-output-migration)
-for the SIEM envelope migration and consumer requirements.
+for the compact Body migration and native log metadata requirements.

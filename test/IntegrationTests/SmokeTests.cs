@@ -58,6 +58,8 @@ public class SmokeTests : TestHelper
         }
 
         var rounds = new List<JObject>();
+        var eventTimes = new List<ulong>();
+        var eventIds = new List<string>();
         for (var index = 0; index < 2; index++)
         {
             collector.Expect(
@@ -68,11 +70,10 @@ public class SmokeTests : TestHelper
                         return false;
                     }
 
-                    var envelope = JObject.Parse(record.Body.StringValue);
-                    Assert.Equal("software_inventory_info", (string?)envelope["event_class"]);
-                    var evidence = JObject.Parse((string)envelope["message"]!);
-                    Assert.Equal((string?)evidence["instance_id"], (string?)envelope["instance_id"]);
-                    rounds.Add(evidence);
+                    rounds.Add(JObject.Parse(record.Body.StringValue));
+                    eventTimes.Add(record.TimeUnixNano);
+                    eventIds.Add(Assert.Single(record.Attributes, attribute => attribute.Key == "event_id").Value.StringValue);
+                    Assert.InRange(record.TimeUnixNano, 1UL, (ulong)long.MaxValue);
                     return true;
                 },
                 "A complete runtime inventory round should reach OTLP.");
@@ -95,7 +96,9 @@ public class SmokeTests : TestHelper
 
             Assert.Equal((string?)rounds[0]["instance_id"], (string?)rounds[1]["instance_id"]);
             Assert.Equal((string?)rounds[0]["started_at"], (string?)rounds[1]["started_at"]);
-            Assert.True((DateTime)rounds[1]["observed_at"]! > (DateTime)rounds[0]["observed_at"]!);
+            Assert.True(eventTimes[1] > eventTimes[0]);
+            Assert.NotEqual(eventIds[0], eventIds[1]);
+            Assert.All(rounds, round => Assert.Null(round["observed_at"]));
             Assert.True((long)rounds[1]["uptime_ms"]! > (long)rounds[0]["uptime_ms"]!);
             Assert.Contains(rounds[1]["dependencies"]!, dependency => (string?)dependency["name"] == ServiceName);
         }

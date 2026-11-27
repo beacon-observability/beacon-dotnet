@@ -13,6 +13,7 @@ using OpenTelemetry.AutoInstrumentation.Configurations;
 
 namespace OpenTelemetry.AutoInstrumentation.Security;
 
+// Historical downstream reference only; producers bind native metadata with SecurityLogRecord.
 internal static class SecuritySiem
 {
     private static readonly Lazy<Dictionary<string, string>> Resource = new(() =>
