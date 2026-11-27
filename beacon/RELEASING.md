@@ -5,6 +5,22 @@ must be rebuilt from a pinned commit by the tag workflow, created first as a
 draft for manual verification, and downloaded again from the public Release for
 post-publication validation.
 
+## Release note layout
+
+- Keep the GitHub Release title to `vX.Y.Z`; do not repeat the project/version
+  as an H1 in the body.
+- Use `Changes`, `Upgrade`, `Distribution`, and `Validation` H2 sections,
+  omitting sections that do not apply. Prefer short bullets and a small table
+  for breaking field migrations.
+- Keep each paragraph and list item on one physical line. Do not manually
+  hard-wrap prose for an 80-column editor: GitHub Release rendering can turn
+  those breaks into fragmented lines.
+- Keep consumer changes, defaults, rollback versions, component versions, and
+  validated scope explicit. Link full commit/digest values, implementation
+  history, and detailed validation receipts instead of embedding long blocks.
+- Review the rendered GitHub page after editing. Preserve published tags and
+  assets when changing release text.
+
 ## Versions and Tags
 
 - [`version.properties`](version.properties) is the only manually maintained
